@@ -49,3 +49,6 @@ of activerecord callbacks/inserts/updates.
   * a `before(:once)` block should not reference instance variables set by a
     `before`.
   * a `let_once` block should not call non-once'd `let`s or `subject`s.
+* Because all once'd blocks will be recorded (even if not all used in an
+  example), you should ensure they don't conflict with each other (e.g.
+  unique constraint violations).

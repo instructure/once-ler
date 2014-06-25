@@ -1,21 +1,15 @@
 module Onceler
-  # need:
-  #
-  # before(:all) to record once blocks
-  # * can we somehow do it just once for the group even if there is nesting?
-  #
-  # before(:each) to replay recordings
   module ClassMethods
     module BasicHelpers
       def let_once(name, &block)
-        onceler.add name, &block
         raise "#let or #subject called without a block" if block.nil?
+        onceler[name] = block
         # TODO: prevent super calls, a la NamedSubjectPreventSuper
-        define_method(name) { onceler.replay(name) }
+        define_method(name) { onceler[name] }
       end
 
       def before_once(&block)
-        onceler.add &block
+        onceler << block
       end
 
       def before_once?(type)
@@ -30,13 +24,42 @@ module Onceler
         end
       end
 
-      def onceler!
-        include AmbitiousHelpers
+      def recorders
+        return [] if self == RSpec::Core::ExampleGroup
+        superclass.recorders + (@recorder ? [@recorder] : [])
       end
 
       private
-      def onceler
-        @onceler ||= Recorder.new
+
+      def recorder
+        unless @recorder
+          @recorder = Recorder.new
+          add_recorder_hooks!
+        end
+        @recorder
+      end
+
+      def add_recorder_hooks!
+        return if recorders.present? # parent group already did it
+        # TODO: can we somehow do it just once for the group even if it
+        # has nested groups?
+        around_all do
+          # TODO: configurable transaction fu (say, if you have multiple
+          # conns)
+          ActiveRecord::Base.transaction do |group|
+            group.recorders.map(&:record!)
+            group.run_examples
+            group.recorders.map(&:reset!)
+          end
+        end
+        register_hook :append, :before, :each do
+          recorder.instance = self
+          recorder.replay_blocks!
+        end
+      end
+
+      def onceler!
+        include AmbitiousHelpers
       end
     end
 
@@ -62,12 +85,61 @@ module Onceler
   end
 
   class Recorder
+    attr_accessor :instance
+
     def initialize
-      @recordings = []
-      @named_recordings = {}
+      @all = []
+      @unnamed = []
+      @named = {}
     end
 
-    def add(name = nil, &block)
+    def register(block)
+      recording = Recording.new(block, bucket)
+      @all << recording
+      block
+    end
+
+    def <<(block)
+      @unnamed << register(block)
+    end
+
+    def record!
+      # how to share across examples?
+      canvas = BasicObject.new
+      @all.each do |recording|
+        recording.record!(canvas)
+      end
+    end
+
+    def reset!
+      @all.each(&:reset!)
+    end
+
+    def replay_unnamed!
+      @unnamed.each do |recording|
+        recording.replay_into!(@instance)
+      end
+    end
+
+    def []=(name, block)
+      @named[name] = register(recording)
+    end
+
+    def [](name)
+      @named[name].replay_into!(@instance)
+    end
+  end
+
+  class Recording
+    def record!
+
+    end
+
+    def replay_into!(instance)
+      @ivars.each do |key, value|
+        instance.instance_variable_set(key, value)
+      end
+      @retval
     end
   end
 end
