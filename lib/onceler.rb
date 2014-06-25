@@ -1,15 +1,19 @@
+require "onceler/around_all"
+
 module Onceler
   module ClassMethods
     module BasicHelpers
+      include AroundAll
+
       def let_once(name, &block)
         raise "#let or #subject called without a block" if block.nil?
-        onceler[name] = block
+        recorder[name] = block
         # TODO: prevent super calls, a la NamedSubjectPreventSuper
-        define_method(name) { onceler[name] }
+        define_method(name) { recorder[name] }
       end
 
       def before_once(&block)
-        onceler << block
+        recorder << block
       end
 
       def before_once?(type)
@@ -39,22 +43,34 @@ module Onceler
         @recorder
       end
 
+      def record_all!
+        # TODO: can we somehow record just once for the group even if it
+        # has nested groups?
+        tape = BlankTape.new
+        recorders.each do |record|
+          recorder.record_onto!(tape)
+        end
+        group.run_examples
+      end
+
+      def replay_all!
+        recorders.each do |recorder|
+          recorder.replay_into!(self)
+        end
+      end
+
       def add_recorder_hooks!
         return if recorders.present? # parent group already did it
-        # TODO: can we somehow do it just once for the group even if it
-        # has nested groups?
-        around_all do
+
+        around_all do |group|
           # TODO: configurable transaction fu (say, if you have multiple
           # conns)
-          ActiveRecord::Base.transaction do |group|
-            group.recorders.map(&:record!)
-            group.run_examples
-            group.recorders.map(&:reset!)
+          ActiveRecord::Base.transaction do
+            group.record_all!
           end
         end
         register_hook :append, :before, :each do
-          recorder.instance = self
-          recorder.replay_blocks!
+          example_group.replay_all!
         end
       end
 
@@ -73,7 +89,7 @@ module Onceler
       end
       # don't need to redefine subject, since it just calls let
 
-      # remove auto-before'ing of ! methods, since we do it our own way
+      # remove auto-before'ing of ! methods, since we memoize our own way
       def let!(name, &block)
         let(name, &block)
       end
@@ -84,62 +100,126 @@ module Onceler
     end
   end
 
+  class BlankTape
+    def initialize
+      @__retvals = {}
+    end
+
+    def __prepare_recording(recording)
+      method = recording.name
+      define_method(method) do
+        if @__retvals.key?(method)
+          @__retvals[method]
+        else
+          @__retvals[method] = __record(recording)
+        end
+      end
+    end
+
+    def __record(recording)
+      instance_eval(&recording.block)
+    end
+
+    def __ivars
+      ivars = instance_variables - [:@__retvals]
+      ivars.inject({}) { |hash, key|
+        val = instance_variable_get(key)
+        val = val.dup if val.duplicable?
+        hash[key] = val
+        hash
+      }
+    end
+
+    def __data
+      [__ivars, __retvals]
+    end
+  end
+
   class Recorder
     attr_accessor :instance
 
     def initialize
-      @all = []
-      @unnamed = []
-      @named = {}
-    end
-
-    def register(block)
-      recording = Recording.new(block, bucket)
-      @all << recording
-      block
+      @recordings = []
     end
 
     def <<(block)
-      @unnamed << register(block)
-    end
-
-    def record!
-      # how to share across examples?
-      canvas = BasicObject.new
-      @all.each do |recording|
-        recording.record!(canvas)
-      end
-    end
-
-    def reset!
-      @all.each(&:reset!)
-    end
-
-    def replay_unnamed!
-      @unnamed.each do |recording|
-        recording.replay_into!(@instance)
-      end
+      @recordings << Recording.new(block)
     end
 
     def []=(name, block)
-      @named[name] = register(recording)
+      @recordings << NamedRecording.new(block, name)
     end
 
     def [](name)
-      @named[name].replay_into!(@instance)
+      @retvals[name]
+    end
+
+    def record_onto!(tape)
+      # we don't know the order named recordings will be called (or if
+      # they'll call each other), so prep everything first
+      @recordings.each do |recording|
+        recording.prepare_medium!(tape)
+      end
+      @recordings.each do |recording|
+        recording.record_onto!(tape)
+      end
+      @data = Marshal.dump(tape.__data)
+    end
+
+    def reconsitute_data!
+      @ivars, @retvals = Marshal.load(@data)
+      identity_map = {}
+      reidentify!(@ivars, identity_map)
+      reidentify!(@retvals, identity_map)
+    end
+
+    def reidentify!(hash, identity_map)
+      hash.each do |key, value|
+        if identity_map.key?(value)
+          hash[key] = identity_map[value]
+        else
+          identity_map[value] = value
+        end
+      end
+    end
+
+    def replay_into!(instance)
+      @instance = instance
+      reconsitute_data!
+      ivars.each do |key, value|
+        instance.instance_variable_set(key, value)
+      end
     end
   end
 
   class Recording
-    def record!
+    attr_reader :block
 
+    def initialize(block)
+      @block = block
     end
 
-    def replay_into!(instance)
-      @ivars.each do |key, value|
-        instance.instance_variable_set(key, value)
-      end
-      @retval
+    def prepare_medium(tape); end
+
+    def record_onto!(tape)
+      tape.__record(self)
+    end
+  end
+
+  class NamedRecording < Recording
+    attr_reader :name
+
+    def initialize(block, name = nil)
+      super
+      @name = name
+    end
+
+    def prepare_medium!(tape)
+      tape.__prepare_recording(self)
+    end
+
+    def record_onto!(tape)
+      tape.send(method)
     end
   end
 end
