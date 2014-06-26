@@ -63,7 +63,7 @@ module Onceler
 
       def parent_onceler
         return unless superclass.respond_to?(:onceler)
-        superclass.onceler(:inherit)
+        superclass.onceler
       end
 
       def add_onceler_hooks!
@@ -138,12 +138,11 @@ module Onceler
 
     def __ivars
       ivars = instance_variables - [:@__retvals]
-      ivars.inject({}) { |hash, key|
+      ivars.inject({}) do |hash, key|
         val = instance_variable_get(key)
-        val = val.dup if val.duplicable?
         hash[key] = val
         hash
-      }
+      end
     end
 
     def __data
