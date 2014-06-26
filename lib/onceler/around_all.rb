@@ -1,4 +1,6 @@
 # adapted from https://gist.github.com/myronmarston/2005175
+require 'delegate'
+require 'fiber'
 
 module Onceler
   module AroundAll
@@ -12,15 +14,17 @@ module Onceler
       end
     end
 
-    def around_all(scope, &block)
-      fibers = {}
+    def around_all(&block)
+      fibers = []
       prepend_before(:all) do |group|
-        fiber = fibers[group] = Fiber.new(&block)
+        fiber = Fiber.new(&block)
+        fibers << fiber
         fiber.resume(FiberAwareGroup.new(group))
       end
 
       after(:all) do |group|
-        fibers.delete(group).resume
+        fiber = fibers.pop
+        fiber.resume if fiber.alive?
       end
     end
   end

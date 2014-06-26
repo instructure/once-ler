@@ -1,19 +1,37 @@
+require "rspec"
 require "onceler/around_all"
+begin
+  require "factory_girl"
+rescue LoadError
+end
 
 module Onceler
-  module ClassMethods
-    module BasicHelpers
+  module BasicHelpers
+    def onceler
+      self.class.onceler
+    end
+
+    def self.included(mod)
+      mod.extend(ClassMethods)
+    end
+
+    module ClassMethods
       include AroundAll
 
       def let_once(name, &block)
         raise "#let or #subject called without a block" if block.nil?
-        recorder[name] = block
-        # TODO: prevent super calls, a la NamedSubjectPreventSuper
-        define_method(name) { recorder[name] }
+        onceler(:create)[name] = block
+        define_method(name) { onceler[name] }
+      end
+
+      def subject_once(name = nil, &block)
+        name ||= :subject
+        let_once(name, &block)
+        alias_method :subject, name if name != :subject
       end
 
       def before_once(&block)
-        recorder << block
+        onceler(:create) << block
       end
 
       def before_once?(type)
@@ -28,54 +46,46 @@ module Onceler
         end
       end
 
-      def recorders
-        return [] if self == RSpec::Core::ExampleGroup
-        superclass.recorders + (@recorder ? [@recorder] : [])
+      def onceler(create_own = false)
+        if create_own
+          @onceler ||= create_onceler!
+        else
+          @onceler || parent_onceler
+        end
+      end
+
+      def create_onceler!
+        add_onceler_hooks!
+        Recorder.new(parent_onceler)
       end
 
       private
 
-      def recorder
-        unless @recorder
-          @recorder = Recorder.new
-          add_recorder_hooks!
-        end
-        @recorder
+      def parent_onceler
+        return unless superclass.respond_to?(:onceler)
+        superclass.onceler(:inherit)
       end
 
-      def record_all!
-        # TODO: can we somehow record just once for the group even if it
-        # has nested groups?
-        tape = BlankTape.new
-        recorders.each do |record|
-          recorder.record_onto!(tape)
-        end
-        group.run_examples
-      end
-
-      def replay_all!
-        recorders.each do |recorder|
-          recorder.replay_into!(self)
-        end
-      end
-
-      def add_recorder_hooks!
-        return if recorders.present? # parent group already did it
-
+      def add_onceler_hooks!
         around_all do |group|
           # TODO: configurable transaction fu (say, if you have multiple
           # conns)
-          ActiveRecord::Base.transaction do
-            group.record_all!
+          ActiveRecord::Base.transaction(requires_new: true) do
+            group.onceler.record!
+            group.run_examples
+            raise ActiveRecord::Rollback
           end
         end
-        register_hook :append, :before, :each do
-          example_group.replay_all!
+        # only the outer-most group needs to do this
+        unless parent_onceler
+          register_hook :append, :before, :each do
+            onceler.replay_into!(self)
+          end
         end
       end
 
       def onceler!
-        include AmbitiousHelpers
+        extend AmbitiousHelpers
       end
     end
 
@@ -85,9 +95,13 @@ module Onceler
       end
 
       def let(name, &block)
-        let_once(name, block)
+        let_once(name, &block)
       end
-      # don't need to redefine subject, since it just calls let
+
+      # TODO NamedSubjectPreventSuper
+      def subject(name = nil, &block)
+        subject_once(name, &block)
+      end
 
       # remove auto-before'ing of ! methods, since we memoize our own way
       def let!(name, &block)
@@ -101,13 +115,15 @@ module Onceler
   end
 
   class BlankTape
+    include ::FactoryGirl::Syntax::Methods if defined?(FactoryGirl)
+
     def initialize
       @__retvals = {}
     end
 
     def __prepare_recording(recording)
       method = recording.name
-      define_method(method) do
+      define_singleton_method(method) do
         if @__retvals.key?(method)
           @__retvals[method]
         else
@@ -131,14 +147,31 @@ module Onceler
     end
 
     def __data
-      [__ivars, __retvals]
+      [__ivars, @__retvals]
+    end
+
+    def copy
+      copy = self.class.new
+      copy.copy_from(self)
+      copy
+    end
+
+    def copy_from(other)
+      ivars, @__retvals = Marshal.load(Marshal.dump(other.__data))
+      ivars.each do |key, value|
+        instance_variable_set(key, value)
+      end
+      @__retvals.each do |key, value|
+        define_singleton_method(key) { value }
+      end
     end
   end
 
   class Recorder
-    attr_accessor :instance
+    attr_accessor :tape
 
-    def initialize
+    def initialize(parent)
+      @parent = parent
       @recordings = []
     end
 
@@ -154,16 +187,18 @@ module Onceler
       @retvals[name]
     end
 
-    def record_onto!(tape)
+    def record!
+      @tape = @parent ? @parent.tape.copy : BlankTape.new
+
       # we don't know the order named recordings will be called (or if
       # they'll call each other), so prep everything first
       @recordings.each do |recording|
-        recording.prepare_medium!(tape)
+        recording.prepare_medium!(@tape)
       end
       @recordings.each do |recording|
-        recording.record_onto!(tape)
+        recording.record_onto!(@tape)
       end
-      @data = Marshal.dump(tape.__data)
+      @data = Marshal.dump(@tape.__data)
     end
 
     def reconsitute_data!
@@ -184,9 +219,8 @@ module Onceler
     end
 
     def replay_into!(instance)
-      @instance = instance
       reconsitute_data!
-      ivars.each do |key, value|
+      @ivars.each do |key, value|
         instance.instance_variable_set(key, value)
       end
     end
@@ -199,7 +233,7 @@ module Onceler
       @block = block
     end
 
-    def prepare_medium(tape); end
+    def prepare_medium!(tape); end
 
     def record_onto!(tape)
       tape.__record(self)
@@ -210,7 +244,7 @@ module Onceler
     attr_reader :name
 
     def initialize(block, name = nil)
-      super
+      super(block)
       @name = name
     end
 
@@ -219,8 +253,11 @@ module Onceler
     end
 
     def record_onto!(tape)
-      tape.send(method)
+      tape.send(@name)
     end
   end
 end
 
+RSpec.configure do |c|
+  c.include Onceler::BasicHelpers
+end

@@ -3,6 +3,12 @@
 once-ler supercharges your `let`s and `before`s with the performance
 of `before(:all)`.
 
+## Installation
+
+```ruby
+gem "once-ler"
+```
+
 ## Basic usage
 
 ### before(:once) { ... }
