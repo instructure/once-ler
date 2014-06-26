@@ -1,11 +1,15 @@
 require "rspec"
 require "onceler/around_all"
-begin
-  require "factory_girl"
-rescue LoadError
-end
 
 module Onceler
+  def self.configuration
+    @configuration ||= Configuration.new
+  end
+
+  def self.configure
+    yield configuration
+  end
+
   module BasicHelpers
     def onceler
       self.class.onceler
@@ -21,6 +25,7 @@ module Onceler
       def let_once(name, &block)
         raise "#let or #subject called without a block" if block.nil?
         onceler(:create)[name] = block
+        @current_let_once = name
         define_method(name) { onceler[name] }
       end
 
@@ -111,22 +116,37 @@ module Onceler
       def subject!(name = nil, &block)
         subject(name, &block)
       end
+
+      # make sure we have access to subsequently added methods when
+      # recording (not just `lets'). note that this really only works
+      # for truly functional methods with no external dependencies. e.g.
+      # methods that add stubs or set instance variables will not work
+      # while recording
+      def method_added(method_name)
+        return if method_name == @current_let_once
+        onceler = onceler(:create)
+        proxy = onceler.helper_proxy ||= new
+        onceler.helper_methods[method_name] ||= Proc.new do |*args|
+          proxy.send method_name, *args
+        end
+      end
     end
   end
 
   class BlankTape
-    include ::FactoryGirl::Syntax::Methods if defined?(FactoryGirl)
-
-    def initialize
+    def initialize(modules)
+      modules.each { |mod| extend mod }
       @__retvals = {}
+      @__retvals_recorded = {} # we might override an inherited one, so we need to differentiate
     end
 
     def __prepare_recording(recording)
       method = recording.name
       define_singleton_method(method) do
-        if @__retvals.key?(method)
+        if @__retvals_recorded[method]
           @__retvals[method]
         else
+          @__retvals_recorded[method] = true
           @__retvals[method] = __record(recording)
         end
       end
@@ -137,7 +157,7 @@ module Onceler
     end
 
     def __ivars
-      ivars = instance_variables - [:@__retvals]
+      ivars = instance_variables - [:@__retvals, :@__retvals_recorded]
       ivars.inject({}) do |hash, key|
         val = instance_variable_get(key)
         hash[key] = val
@@ -149,8 +169,8 @@ module Onceler
       [__ivars, @__retvals]
     end
 
-    def copy
-      copy = self.class.new
+    def copy(mixins)
+      copy = self.class.new(mixins)
       copy.copy_from(self)
       copy
     end
@@ -167,11 +187,12 @@ module Onceler
   end
 
   class Recorder
-    attr_accessor :tape
+    attr_accessor :tape, :helper_proxy
 
     def initialize(parent)
       @parent = parent
       @recordings = []
+      @named_recordings = []
     end
 
     def <<(block)
@@ -179,6 +200,7 @@ module Onceler
     end
 
     def []=(name, block)
+      @named_recordings << name
       @recordings << NamedRecording.new(block, name)
     end
 
@@ -187,7 +209,8 @@ module Onceler
     end
 
     def record!
-      @tape = @parent ? @parent.tape.copy : BlankTape.new
+      @tape = @parent ? @parent.tape.copy(mixins) : BlankTape.new(mixins)
+      proxy_recordable_methods!
 
       # we don't know the order named recordings will be called (or if
       # they'll call each other), so prep everything first
@@ -198,6 +221,37 @@ module Onceler
         recording.record_onto!(@tape)
       end
       @data = Marshal.dump(@tape.__data)
+    end
+
+    def proxy_recordable_methods!
+      # the proxy is used to run non-recordable methods that may be called
+      # by ones are recording. since the former could in turn call more of
+      # the latter, we need to proxy the other way too
+      return unless helper_proxy
+      methods = @named_recordings
+      reverse_proxy = @tape
+      helper_proxy.instance_eval do
+        methods.each do |method|
+          define_singleton_method(method) { reverse_proxy.send(method) }
+        end
+      end
+    end
+
+    def helper_methods
+      @helper_methods ||= {}
+    end
+
+    def mixins
+      mixins = (@parent ? @parent.mixins : Onceler.configuration.modules).dup
+      if methods = @helper_methods
+        mixin = Module.new do
+          methods.each do |key, method|
+            define_method(key, &method)
+          end
+        end
+        mixins.push mixin
+      end
+      mixins
     end
 
     def reconsitute_data!
@@ -253,6 +307,16 @@ module Onceler
 
     def record_onto!(tape)
       tape.send(@name)
+    end
+  end
+
+  class Configuration
+    def modules
+      @modules ||= []
+    end
+
+    def include(mod)
+      modules << mod
     end
   end
 end
