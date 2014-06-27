@@ -1,4 +1,5 @@
 require "onceler"
+require "database_cleaner"
 require "active_record/connection_adapters/sqlite3_adapter"
 ActiveRecord::Base.establish_connection(database: ":memory:", adapter: "sqlite3")
 
@@ -8,87 +9,135 @@ User.connection.create_table :users do |t|
   t.string :name
 end
 
-describe Onceler do
-  include Onceler::BasicHelpers
-  describe ".let_once" do
-    user_create_count = 0
+RSpec.configure do |config|
+  config.before(:suite) do
+    DatabaseCleaner.strategy = :transaction
+  end
 
-    let_once(:user) {
-      user_create_count += 1
-      User.create(name: "bob")
-    }
-
-    it "should be memoized within a spec" do
-      user.update_attribute(:name, "joe")
-      expect(user.name).to eql("joe")
+  config.around(:each) do |example|
+    DatabaseCleaner.cleaning do
+      example.run
     end
+  end
+end
 
-    it "should give each spec a blank slate" do
+shared_examples_for ".let_once" do |let_method = :let_once|
+  user_create_calls = 0
+  preexisting_user_count = 0
+
+  before(:all) do
+    preexisting_user_count = User.count
+  end
+
+  send let_method, :user do
+    user_create_calls += 1
+    User.create(name: "bob")
+  end
+
+  it "should be memoized within a spec" do
+    user.update_attribute(:name, "joe")
+    expect(user.name).to eql("joe")
+  end
+
+  it "should give each spec a blank slate" do
+    expect(user.name).to eql("bob")
+  end
+
+  context "with nesting" do
+    it "should work" do
       expect(user.name).to eql("bob")
-    end
-
-    context "with nesting" do
-      it "should work" do
-        expect(user.name).to eql("bob")
-      end
-    end
-
-    context "with overrides" do
-      let_once(:user) {
-        User.create(name: "billy")
-      }
-
-      it "should override inherited lets" do
-        expect(User.count).to eql(2)
-        expect(user.name).to eql("billy")
-      end
-    end
-
-    after(:all) do
-      expect(user_create_count).to eql(1)
-      expect(User.count).to eql(1)
     end
   end
 
-  describe ".before(:once)" do
-    user_create_count = 0
+  context "with overrides" do
+    send let_method, :user do
+      User.create(name: "billy")
+    end
 
-    before(:once) {
-      user_create_count += 1
-      @user = User.create(name: "sally")
-    }
+    it "should override inherited let_onces" do
+      expect(user.name).to eql("billy")
+    end
 
-    it "should set instance variables" do
-      @user.update_attribute(:name, "jane")
+    it "should not prevent inherited let_onces from running" do
+      expect(User.where(name: "bob")).to be_present
+    end
+  end
+
+  after(:all) do
+    expect(user_create_calls).to eql(1)
+    expect(User.count).to eql(preexisting_user_count)
+  end
+end
+
+shared_examples_for ".before(:once)" do |scope = :once|
+  user_create_calls = 0
+  preexisting_user_count = 0
+
+  before(:all) do
+    preexisting_user_count = User.count
+  end
+
+  before(scope) do
+    user_create_calls += 1
+    @user = User.create(name: "sally")
+  end
+
+  it "should set instance variables" do
+    @user.update_attribute(:name, "jane")
+    expect(@user).to be_present
+    expect(@user).to eql(User.first)
+  end
+
+  it "should give each spec a blank slate" do
+    expect(@user.name).to eql("sally")
+  end
+
+  context "with nesting" do
+    it "should work" do
       expect(@user).to be_present
-      expect(@user).to eql(User.first)
+    end
+  end
+
+  context "with overrides" do
+    before(scope) do
+      @user = User.create(name: "mary")
     end
 
-    it "should give each spec a blank slate" do
-      expect(@user.name).to eql("sally")
+    it "should override results of inherited before(:once)s" do
+      expect(@user.name).to eql("mary")
     end
 
-    context "with nesting" do
-      it "should work" do
-        expect(@user).to be_present
-        expect(@user).to eql(User.first)
-      end
+    it "should not prevent inherited before(:once)s from running" do
+      expect(User.where(name: "sally")).to be_present
+    end
+  end
+
+  after(:all) do
+    expect(user_create_calls).to eql(1)
+    expect(User.count).to eql(preexisting_user_count)
+  end
+end
+
+describe Onceler do
+  include Onceler::BasicHelpers
+
+  describe ".let_once" do
+    it_behaves_like ".let_once"
+  end
+
+  describe ".before(:once)" do
+    it_behaves_like ".before(:once)"
+  end
+
+  context "with onceler!" do
+    onceler!
+
+    describe ".let" do
+      it_behaves_like ".let_once", :let
     end
 
-    context "with overrides" do
-      before(:once) {
-        @user = User.create(name: "mary")
-      }
-
-      it "should override inherited lets" do
-        expect(User.count).to eql(2)
-        expect(@user.name).to eql("mary")
-      end
-    end
-
-    after(:all) do
-      expect(user_create_count).to eql(1)
-      expect(User.count).to eql(1)
+    describe ".before(nil)" do
+      it_behaves_like ".before(:once)", nil
     end
   end
 

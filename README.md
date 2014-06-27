@@ -30,6 +30,10 @@ Change a slow `before` to `before(:once)` to speed it up.
 
 Change a slow `let` (or `let!`) to `let_once` to speed it up.
 
+### subject_once(...) { ... }
+
+Change a slow `subject` (or `subject!`) to `subject_once` to speed it up.
+
 ## Ambitious usage
 
 If you're feeling bold, you can automatically speed up all
@@ -70,6 +74,9 @@ of activerecord callbacks/inserts/updates.
 
 ## Caveats
 
+* If you are doing anything database-y, you need to use transactional
+  tests (either via `use_transactional_fixtures=true`, or something like
+  [database_cleaner](https://github.com/DatabaseCleaner/database_cleaner))
 * Your once'd blocks should have no side effects other than database
   statements, return values, and instance variables.
 * Your return values and instance variables need to be able to handle a

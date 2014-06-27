@@ -39,20 +39,22 @@ module Onceler
       # :each / :once
       [:let, :let!, :subject, :subject!].each do |method|
         once_method = (method.to_s.sub(/!\z/, '') + "_once").to_sym
-        define_method(method) do |name = nil, scope = nil|
+        define_method(method) do |name = nil, scope = nil, &block|
           if once_scope?(scope)
-            send once_method, name, &Proc.new
+            send once_method, name, &block
           else
-            super name, &Proc.new
+            super name, &block
           end
         end
       end
 
       # set up let_each, etc.
       [:let, :let!, :subject, :subject!].each do |method|
-        each_method = (method.to_s.sub(/!\z/, '') + "_each").to_sym
-        define_method(each_method) do |name = nil|
-          send method, name, &Proc.new
+        each_method = method.to_s
+        bang = each_method.sub!(/!\z/, '')
+        each_method = (each_method + "_each" + (bang ? "!" : "")).to_sym
+        define_method(each_method) do |name = nil, &block|
+          send method, name, &block
         end
       end
 
