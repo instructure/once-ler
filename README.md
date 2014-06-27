@@ -33,14 +33,18 @@ Change a slow `let` (or `let!`) to `let_once` to speed it up.
 ## Ambitious usage
 
 If you're feeling bold, you can automatically speed up all
-`let`s/`before(:each)`s in an example group:
+`let`s/`before`s in an example group:
 
 ```ruby
 describe "something" do
   onceler!
-  let(:foo) { ... }    # behaves like let_once
-  before { ... }       # behaves like before(:once)
-  before(:all) { ... } # no change here though
+
+  let(:foo) { ... }      # behaves like let_once
+  before { ... }         # behaves like before(:once)
+
+  # but if you need explict eaches, you can still do them:
+  let_each(:foo) { ... }
+  before(:each) { ... }
 end
 ```
 

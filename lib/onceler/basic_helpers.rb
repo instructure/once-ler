@@ -13,12 +13,14 @@ module Onceler
 
     module ClassMethods
       def let_once(name, &block)
+        raise ArgumentError, "wrong number of arguments (0 for 1)" if name.nil?
         raise "#let or #subject called without a block" if block.nil?
         onceler(:create)[name] = block
         @current_let_once = name
         define_method(name) { onceler[name] }
       end
 
+      # TODO NamedSubjectPreventSuper
       def subject_once(name = nil, &block)
         name ||= :subject
         let_once(name, &block)
@@ -29,12 +31,33 @@ module Onceler
         onceler(:create) << block
       end
 
-      def before_once?(type)
-        type == :once
+      def once_scope?(scope)
+        scope == :once
+      end
+
+      # add second scope argument to explicitly differentiate between
+      # :each / :once
+      [:let, :let!, :subject, :subject!].each do |method|
+        once_method = (method.to_s.sub(/!\z/, '') + "_once").to_sym
+        define_method(method) do |name = nil, scope = nil|
+          if once_scope?(scope)
+            send once_method, name, &Proc.new
+          else
+            super name, &Proc.new
+          end
+        end
+      end
+
+      # set up let_each, etc.
+      [:let, :let!, :subject, :subject!].each do |method|
+        each_method = (method.to_s.sub(/!\z/, '') + "_each").to_sym
+        define_method(each_method) do |name = nil|
+          send method, name, &Proc.new
+        end
       end
 
       def before(*args, &block)
-        if before_once?(args.first)
+        if once_scope?(args.first)
           before_once(&block)
         else
           super(*args, &block)
@@ -52,6 +75,20 @@ module Onceler
       def create_onceler!
         add_onceler_hooks!
         Recorder.new(parent_onceler)
+      end
+
+      # make sure we have access to subsequently added methods when
+      # recording (not just `lets'). note that this really only works
+      # for truly functional methods with no external dependencies. e.g.
+      # methods that add stubs or set instance variables will not work
+      # while recording
+      def method_added(method_name)
+        return if method_name == @current_let_once
+        onceler = onceler(:create)
+        proxy = onceler.helper_proxy ||= new
+        onceler.helper_methods[method_name] ||= Proc.new do |*args|
+          proxy.send method_name, *args
+        end
       end
 
       private
