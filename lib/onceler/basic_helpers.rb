@@ -86,7 +86,7 @@ module Onceler
       # while recording
       def method_added(method_name)
         return if method_name == @current_let_once
-        onceler = onceler(:create)
+        return if !@onceler
         proxy = onceler.helper_proxy ||= new
         onceler.helper_methods[method_name] ||= Proc.new do |*args|
           proxy.send method_name, *args
@@ -111,7 +111,7 @@ module Onceler
 
         # only the outer-most group needs to do this
         unless parent_onceler
-          append_before :each do
+          before :each do
             onceler.replay_into!(self)
           end
         end
