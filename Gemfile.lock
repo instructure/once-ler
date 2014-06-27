@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    once-ler (0.0.2)
+    once-ler (0.0.3)
       activerecord (>= 3.0)
       rspec (>= 2.14)
 

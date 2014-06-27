@@ -1,8 +1,10 @@
 require "onceler/blank_tape"
-require "active_record"
+require "onceler/transactions"
 
 module Onceler
   class Recorder
+    include Transactions
+
     attr_accessor :tape, :helper_proxy
 
     def initialize(parent)
@@ -114,39 +116,6 @@ module Onceler
     def rollback_transactions!
       transaction_classes.each do |klass|
         rollback_transaction(klass.connection)
-      end
-    end
-
-    if ActiveRecord::VERSION::MAJOR >= 4
-      def begin_transaction(conn)
-        conn.begin_transaction requires_new: true
-      end
-
-      def rollback_transaction(conn)
-        conn.rollback_transaction
-      end
-    else
-      def begin_transaction(klass)
-        unless conn.instance_variable_get(:@_current_transaction_records)
-          conn.instance_variable_set(:@_current_transaction_records, [])
-        end
-        if conn.open_transactions == 0
-          conn.begin_db_transaction
-        else
-          conn.create_savepoint
-        end
-        conn.increment_open_transactions
-      end
-
-      def begin_transaction(klass)
-        conn.decrement_open_transactions
-        if conn.open_transactions == 0
-          conn.rollback_db_transaction
-          conn.send :rollback_transaction_records, true
-        else
-          conn.rollback_to_savepoint
-          conn.send :rollback_transaction_records, false
-        end
       end
     end
   end
