@@ -1,5 +1,4 @@
 require "onceler/ambitious_helpers"
-require "onceler/around_all"
 require "onceler/recorder"
 
 module Onceler
@@ -13,8 +12,6 @@ module Onceler
     end
 
     module ClassMethods
-      include AroundAll
-
       def let_once(name, &block)
         raise "#let or #subject called without a block" if block.nil?
         onceler(:create)[name] = block
@@ -65,18 +62,17 @@ module Onceler
       end
 
       def add_onceler_hooks!
-        around_all do |group|
-          # TODO: configurable transaction fu (say, if you have multiple
-          # conns)
-          ActiveRecord::Base.transaction(requires_new: true) do
-            group.onceler.record!
-            group.run_examples
-            raise ActiveRecord::Rollback
-          end
+        prepend_before(:all) do |group|
+          group.onceler.record!
         end
+
+        after(:all) do |group|
+          group.onceler.reset!
+        end
+
         # only the outer-most group needs to do this
         unless parent_onceler
-          register_hook :append, :before, :each do
+          append_before :each do
             onceler.replay_into!(self)
           end
         end

@@ -1,4 +1,5 @@
 require "onceler/blank_tape"
+require "active_record"
 
 module Onceler
   class Recorder
@@ -24,6 +25,7 @@ module Onceler
     end
 
     def record!
+      begin_transactions!
       @tape = @parent ? @parent.tape.copy(mixins) : BlankTape.new(mixins)
       proxy_recordable_methods!
 
@@ -36,6 +38,10 @@ module Onceler
         recording.record_onto!(@tape)
       end
       @data = Marshal.dump(@tape.__data)
+    end
+
+    def reset!
+      rollback_transactions!
     end
 
     def proxy_recordable_methods!
@@ -90,6 +96,57 @@ module Onceler
       reconsitute_data!
       @ivars.each do |key, value|
         instance.instance_variable_set(key, value)
+      end
+    end
+
+    # TODO: configurable transaction fu (say, if you have multiple
+    # conns)
+    def transaction_classes
+      [ActiveRecord::Base]
+    end
+
+    def begin_transactions!
+      transaction_classes.each do |klass|
+        begin_transaction(klass.connection)
+      end
+    end
+
+    def rollback_transactions!
+      transaction_classes.each do |klass|
+        rollback_transaction(klass.connection)
+      end
+    end
+
+    if ActiveRecord::VERSION::MAJOR >= 4
+      def begin_transaction(conn)
+        conn.begin_transaction requires_new: true
+      end
+
+      def rollback_transaction(conn)
+        conn.rollback_transaction
+      end
+    else
+      def begin_transaction(klass)
+        unless conn.instance_variable_get(:@_current_transaction_records)
+          conn.instance_variable_set(:@_current_transaction_records, [])
+        end
+        if conn.open_transactions == 0
+          conn.begin_db_transaction
+        else
+          conn.create_savepoint
+        end
+        conn.increment_open_transactions
+      end
+
+      def begin_transaction(klass)
+        conn.decrement_open_transactions
+        if conn.open_transactions == 0
+          conn.rollback_db_transaction
+          conn.send :rollback_transaction_records, true
+        else
+          conn.rollback_to_savepoint
+          conn.send :rollback_transaction_records, false
+        end
       end
     end
   end
