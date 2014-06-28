@@ -60,6 +60,12 @@ RSpec.configure do |c|
 end
 ```
 
+## How much of a speedup will I get?
+
+YMMV, it depends on how bad your `let`s/`before`s are. For example,
+adding once-ler to a subset of [canvas-lms](https://github.com/instructure/canvas-lms)'s
+model specs (spec/models/a*) **reduces their runtime by 40%**.
+
 ## How does it work?
 
 Any `before(:once)`/`let_once` blocks will run just once for the current
