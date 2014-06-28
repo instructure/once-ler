@@ -1,8 +1,6 @@
 require "onceler/transactions"
 
-# monkey-patch these to:
-# 1. not clear connections so that we don't lose our transactions
-# 2. use savepoints (if necessary)
+# monkey-patch these to use savepoints (if necessary)
 
 module ActiveRecord::TestFixtures
   include ::Onceler::Transactions
@@ -59,7 +57,7 @@ module ActiveRecord::TestFixtures
       end
       @fixture_connections.clear
     end
-    ### ONCELER'd
+    ActiveRecord::Base.clear_active_connections!
   end
 end
 
