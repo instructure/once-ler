@@ -39,7 +39,7 @@ module Onceler
       @recordings.each do |recording|
         recording.record_onto!(@tape)
       end
-      @data = Marshal.dump(@tape.__data)
+      @data = @tape.__data
     end
 
     def reset!

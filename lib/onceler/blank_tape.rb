@@ -32,7 +32,7 @@ module Onceler
     end
 
     def __data
-      [__ivars, @__retvals]
+      @__data ||= Marshal.dump([__ivars, @__retvals])
     end
 
     def copy(mixins)
@@ -42,7 +42,7 @@ module Onceler
     end
 
     def copy_from(other)
-      ivars, @__retvals = Marshal.load(Marshal.dump(other.__data))
+      ivars, @__retvals = Marshal.load(other.__data)
       ivars.each do |key, value|
         instance_variable_set(key, value)
       end
