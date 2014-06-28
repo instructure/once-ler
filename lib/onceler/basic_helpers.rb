@@ -101,7 +101,8 @@ module Onceler
       end
 
       def add_onceler_hooks!
-        prepend_before(:all) do |group|
+        before(:all) do |group|
+          Onceler.configuration.run_callbacks(:record, :before)
           group.onceler.record!
         end
 

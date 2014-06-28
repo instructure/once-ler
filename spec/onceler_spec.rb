@@ -23,11 +23,6 @@ end
 
 shared_examples_for ".let_once" do |let_method = :let_once|
   user_create_calls = 0
-  preexisting_user_count = 0
-
-  before(:all) do
-    preexisting_user_count = User.count
-  end
 
   send let_method, :user do
     user_create_calls += 1
@@ -65,17 +60,11 @@ shared_examples_for ".let_once" do |let_method = :let_once|
 
   after(:all) do
     expect(user_create_calls).to eql(1)
-    expect(User.count).to eql(preexisting_user_count)
   end
 end
 
 shared_examples_for ".before(:once)" do |scope = :once|
   user_create_calls = 0
-  preexisting_user_count = 0
-
-  before(:all) do
-    preexisting_user_count = User.count
-  end
 
   before(scope) do
     user_create_calls += 1
@@ -114,8 +103,11 @@ shared_examples_for ".before(:once)" do |scope = :once|
 
   after(:all) do
     expect(user_create_calls).to eql(1)
-    expect(User.count).to eql(preexisting_user_count)
   end
+end
+
+shared_context "user cleanup" do
+  after(:all) { expect(User.count).to eql(0) }
 end
 
 describe Onceler do
@@ -123,10 +115,12 @@ describe Onceler do
 
   describe ".let_once" do
     it_behaves_like ".let_once"
+    include_context "user cleanup"
   end
 
   describe ".before(:once)" do
     it_behaves_like ".before(:once)"
+    include_context "user cleanup"
   end
 
   context "with onceler!" do
@@ -134,10 +128,12 @@ describe Onceler do
 
     describe ".let" do
       it_behaves_like ".let_once", :let
+      include_context "user cleanup"
     end
 
     describe ".before(nil)" do
       it_behaves_like ".before(:once)", nil
+      include_context "user cleanup"
     end
   end
 
