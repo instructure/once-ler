@@ -131,6 +131,15 @@ describe Onceler do
       include_context "user cleanup"
     end
 
+    describe ".let_each" do
+      count = 0
+      let_each(:foo) { count += 1 }
+      it("should behave like let") { foo }
+      it("should behave like let (2)") { foo }
+
+      after(:all) { expect(count).to eql(2) }
+    end
+
     describe ".before(nil)" do
       it_behaves_like ".before(:once)", nil
       include_context "user cleanup"

@@ -54,7 +54,7 @@ module Onceler
         bang = each_method.sub!(/!\z/, '')
         each_method = (each_method + "_each" + (bang ? "!" : "")).to_sym
         define_method(each_method) do |name = nil, &block|
-          send method, name, &block
+          send method, name, :each, &block
         end
       end
 
