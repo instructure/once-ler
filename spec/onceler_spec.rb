@@ -174,6 +174,16 @@ describe Onceler do
     end
   end
 
+  context "identity" do
+    let_once(:user) { User.new }
+    before { @user = @user2 = user }
+
+    it "should generally be preserved" do
+      expect(user).to equal(@user)
+      expect(@user).to equal(@user2)
+    end
+  end
+
   after(:all) do
     # yay cleaned up
     expect(User.count).to eql(0)
