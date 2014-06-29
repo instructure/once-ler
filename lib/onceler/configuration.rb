@@ -8,14 +8,6 @@ module Onceler
   end
 
   class Configuration
-    def modules
-      @modules ||= []
-    end
-
-    def include(mod)
-      modules << mod
-    end
-
     def before(scope, &block)
       callbacks[scope][:before] << block
     end

@@ -1,9 +1,11 @@
 module Onceler
-  class BlankTape
-    def initialize(modules)
-      modules.each { |mod| extend mod }
-      @__retvals = {}
-      @__retvals_recorded = {} # we might override an inherited one, so we need to differentiate
+  module Recordable
+    def self.extended(instance)
+      instance.instance_eval do
+        @__retvals = {}
+        @__retvals_recorded = {} # we might override an inherited one, so we need to differentiate
+        @__ignore_ivars = instance_variables
+      end
     end
 
     def __prepare_recording(recording)
@@ -23,22 +25,18 @@ module Onceler
     end
 
     def __ivars
-      ivars = instance_variables - [:@__retvals, :@__retvals_recorded]
+      ivars = instance_variables - @__ignore_ivars
       ivars.inject({}) do |hash, key|
-        val = instance_variable_get(key)
-        hash[key] = val
+        if key.to_s !~ /\A@__/
+          val = instance_variable_get(key)
+          hash[key] = val
+        end
         hash
       end
     end
 
     def __data
       @__data ||= Marshal.dump([__ivars, @__retvals])
-    end
-
-    def copy(mixins)
-      copy = self.class.new(mixins)
-      copy.copy_from(self)
-      copy
     end
 
     def copy_from(other)

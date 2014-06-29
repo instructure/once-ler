@@ -38,6 +38,20 @@ shared_examples_for ".let_once" do |let_method = :let_once|
     expect(user.name).to eql("bob")
   end
 
+  context "calling instance methods" do
+    send let_method, :call_my_method do
+      my_method
+    end
+
+    def my_method
+      @my_method_called = true
+    end
+
+    it "should work" do
+      expect(@my_method_called).to eql(true)
+    end
+  end
+
   context "with nesting" do
     it "should work" do
       expect(user.name).to eql("bob")
@@ -79,6 +93,20 @@ shared_examples_for ".before(:once)" do |scope = :once|
 
   it "should give each spec a blank slate" do
     expect(@user.name).to eql("sally")
+  end
+
+  context "calling instance methods" do
+    before(scope) do
+      my_method
+    end
+
+    def my_method
+      @my_method_called = true
+    end
+
+    it "should work" do
+      expect(@my_method_called).to eql(true)
+    end
   end
 
   context "with nesting" do

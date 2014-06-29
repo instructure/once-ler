@@ -76,29 +76,15 @@ module Onceler
 
       def create_onceler!
         add_onceler_hooks!
-        Recorder.new(parent_onceler)
+        Recorder.new(self)
       end
-
-      # make sure we have access to subsequently added methods when
-      # recording (not just `lets'). note that this really only works
-      # for truly functional methods with no external dependencies. e.g.
-      # methods that add stubs or set instance variables will not work
-      # while recording
-      def method_added(method_name)
-        return if method_name == @current_let_once
-        return if !@onceler
-        proxy = onceler.helper_proxy ||= new
-        onceler.helper_methods[method_name] ||= Proc.new do |*args|
-          proxy.send method_name, *args
-        end
-      end
-
-      private
 
       def parent_onceler
         return unless superclass.respond_to?(:onceler)
         superclass.onceler
       end
+
+      private
 
       def add_onceler_hooks!
         before(:all) do |group|

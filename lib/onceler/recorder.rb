@@ -1,4 +1,4 @@
-require "onceler/blank_tape"
+require "onceler/recordable"
 require "onceler/transactions"
 
 module Onceler
@@ -7,8 +7,8 @@ module Onceler
 
     attr_accessor :tape, :helper_proxy
 
-    def initialize(parent)
-      @parent = parent
+    def initialize(group_class)
+      @group_class = group_class
       @recordings = []
       @named_recordings = []
     end
@@ -28,8 +28,11 @@ module Onceler
 
     def record!
       begin_transactions!
-      @tape = @parent ? @parent.tape.copy(mixins) : BlankTape.new(mixins)
-      proxy_recordable_methods!
+      @tape = @group_class.new
+      @tape.send :extend, Recordable
+      if parent = @group_class.parent_onceler
+        @tape.copy_from(parent.tape)
+      end
 
       # we don't know the order named recordings will be called (or if
       # they'll call each other), so prep everything first
@@ -44,37 +47,6 @@ module Onceler
 
     def reset!
       rollback_transactions!
-    end
-
-    def proxy_recordable_methods!
-      # the proxy is used to run non-recordable methods that may be called
-      # by ones are recording. since the former could in turn call more of
-      # the latter, we need to proxy the other way too
-      return unless helper_proxy
-      methods = @named_recordings
-      reverse_proxy = @tape
-      helper_proxy.instance_eval do
-        methods.each do |method|
-          define_singleton_method(method) { reverse_proxy.send(method) }
-        end
-      end
-    end
-
-    def helper_methods
-      @helper_methods ||= {}
-    end
-
-    def mixins
-      mixins = (@parent ? @parent.mixins : Onceler.configuration.modules).dup
-      if methods = @helper_methods
-        mixin = Module.new do
-          methods.each do |key, method|
-            define_method(key, &method)
-          end
-        end
-        mixins.push mixin
-      end
-      mixins
     end
 
     def reconsitute_data!
