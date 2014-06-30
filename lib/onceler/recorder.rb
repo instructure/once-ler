@@ -21,7 +21,7 @@ module Onceler
   class Recorder
     include Transactions
 
-    attr_accessor :tape, :helper_proxy
+    attr_accessor :tape
 
     def initialize(group_class)
       @group_class = group_class
