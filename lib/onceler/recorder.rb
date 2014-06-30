@@ -39,7 +39,11 @@ module Onceler
     end
 
     def [](name)
-      @retvals[name]
+      if @retvals && @retvals.key?(name)
+        @retvals[name]
+      elsif parent
+        parent[name]
+      end
     end
 
     def record!
@@ -85,11 +89,16 @@ module Onceler
       end
     end
 
+    def parent
+      @group_class.parent_onceler
+    end
+
     def replay_into!(instance)
       reconsitute_data!
       @ivars.each do |key, value|
         instance.instance_variable_set(key, value)
       end
+      @retvals
     end
 
     # TODO: configurable transaction fu (say, if you have multiple

@@ -96,11 +96,9 @@ module Onceler
           group.onceler.reset!
         end
 
-        # only the outer-most group needs to do this
-        unless parent_onceler
-          before :each do
-            onceler.replay_into!(self)
-          end
+        group_class = self
+        prepend_before(:each) do
+          group_class.onceler.replay_into!(self)
         end
       end
 

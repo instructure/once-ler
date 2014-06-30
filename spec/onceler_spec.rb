@@ -29,6 +29,8 @@ shared_examples_for ".let_once" do |let_method = :let_once|
     User.create(name: "bob")
   end
 
+  let_each(:num){ 1 }
+
   it "should be memoized within a spec" do
     user.update_attribute(:name, "joe")
     expect(user.name).to eql("joe")
@@ -37,6 +39,7 @@ shared_examples_for ".let_once" do |let_method = :let_once|
   it "should give each spec a blank slate" do
     expect(user.name).to eql("bob")
   end
+
 
   context "calling instance methods" do
     send let_method, :call_my_method do
@@ -63,8 +66,14 @@ shared_examples_for ".let_once" do |let_method = :let_once|
       User.create(name: "billy")
     end
 
+    send(let_method, :num){ 2 }
+
     it "should override inherited let_onces" do
       expect(user.name).to eql("billy")
+    end
+
+    it "should override inherited let_eaches" do
+      expect(num).to eql 2
     end
 
     it "should not prevent inherited let_onces from running" do
@@ -84,6 +93,8 @@ shared_examples_for ".before(:once)" do |scope = :once|
     user_create_calls += 1
     @user = User.create(name: "sally")
   end
+
+  before(:each) { @num = 1 }
 
   it "should set instance variables" do
     @user.update_attribute(:name, "jane")
@@ -120,8 +131,14 @@ shared_examples_for ".before(:once)" do |scope = :once|
       @user = User.create(name: "mary")
     end
 
+    before(scope) { @num = 2 }
+
     it "should override results of inherited before(:once)s" do
       expect(@user.name).to eql("mary")
+    end
+
+    it "should override results of inherited before(:each)s" do
+      expect(@num).to eql 2
     end
 
     it "should not prevent inherited before(:once)s from running" do

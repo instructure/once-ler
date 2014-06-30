@@ -24,24 +24,36 @@ module Onceler
       instance_eval(&recording.block)
     end
 
+    def __retvals
+      @__retvals.slice(*@__retvals_recorded.keys)
+    end
+
     def __ivars
       ivars = instance_variables - @__ignore_ivars
       ivars.inject({}) do |hash, key|
         if key.to_s !~ /\A@__/
           val = instance_variable_get(key)
-          hash[key] = val
+          hash[key] = val unless __inherited_ivar?(key, val)
         end
         hash
       end
     end
 
+    def __inherited_ivar?(key, val)
+      return false unless @__inherited_ivar_cache
+      # need to do both types of comparison, i.e. it's the same object in
+      # memory, and nothing about it has been changed
+      @__inherited_ivar_cache[key] == val && @__inherited_ivars.equal?(val)
+    end
+
     def __data
-      @__data ||= Marshal.dump([__ivars, @__retvals])
+      @__data ||= Marshal.dump([__ivars, __retvals])
     end
 
     def copy_from(other)
-      ivars, @__retvals = Marshal.load(other.__data)
-      ivars.each do |key, value|
+      @__inherited_ivar_cache = Marshal.load(other.__data).first
+      @__inherited_ivars, @__retvals = Marshal.load(other.__data)
+      @__inherited_ivars.each do |key, value|
         instance_variable_set(key, value)
       end
       @__retvals.each do |key, value|
