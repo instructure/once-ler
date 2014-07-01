@@ -29,6 +29,8 @@ shared_examples_for ".let_once" do |let_method = :let_once|
     User.create(name: "bob")
   end
 
+  send(let_method, :things){ [1] }
+
   let_each(:num){ 1 }
 
   it "should be memoized within a spec" do
@@ -55,6 +57,22 @@ shared_examples_for ".let_once" do |let_method = :let_once|
     end
   end
 
+  context "inheritance" do
+    send(let_method, :name){ "Bob" }
+    context "through" do
+      send(let_method, :bar){ "bar" }
+      context "contexts" do
+        before :once do
+          # lookups here work differently than in examples, so it's good to test both
+          expect(name).to eql("Bob")
+        end
+        it "works" do
+          expect(name).to eql("Bob")
+        end
+      end
+    end
+  end
+
   context "with nesting" do
     it "should work" do
       expect(user.name).to eql("bob")
@@ -66,10 +84,16 @@ shared_examples_for ".let_once" do |let_method = :let_once|
       User.create(name: "billy")
     end
 
+    send(let_method, :mutated_things) { things << 2 }
+
     send(let_method, :num){ 2 }
 
     it "should override inherited let_onces" do
       expect(user.name).to eql("billy")
+    end
+
+    it "should preserve mutated inherited let_eaches" do
+      expect(things).to eql mutated_things
     end
 
     it "should override inherited let_eaches" do
