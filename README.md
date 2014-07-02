@@ -52,14 +52,6 @@ describe "something" do
 end
 ```
 
-Or even more ambitiously, apply it to all your specs:
-
-```ruby
-RSpec.configure do |c|
-  c.onceler!
-end
-```
-
 ## How much of a speedup will I get?
 
 YMMV, it depends on how bad your `let`s/`before`s are. For example,
