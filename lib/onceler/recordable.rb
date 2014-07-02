@@ -48,9 +48,9 @@ module Onceler
       return true unless @__inherited_cache
       # need to do both types of comparison, i.e. it's the same object in
       # memory (not reassigned), and nothing about it has been changed
-      return false if @__inherited_values.equal?(val)
-      return false if @__inherited_cache[key] == val
-      true
+      return true unless @__inherited_values[key].equal?(val) &&
+                         @__inherited_cache[key] == val
+      false
     end
 
     def __data(inherit = false)
