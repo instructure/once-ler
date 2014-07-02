@@ -85,8 +85,11 @@ of activerecord callbacks/inserts/updates.
   [database_cleaner](https://github.com/DatabaseCleaner/database_cleaner))
 * Your once'd blocks should have no side effects other than database
   statements, return values, and instance variables.
-* Your return values and instance variables need to be able to handle a
-  Marshal.dump/load round trip.
+* Your return values and instance variables:
+  1. need to be able to handle a `Marshal.dump`/`load` round trip.
+  1. should implement `#==` and `#hash`. for built-ins types (e.g. String)
+     or models, this isn't a problem, but if it's a custom class you might
+     need to add them.
 * Your once'd blocks' behavior should not depend on side effects of other
   non-once'd blocks. For example:
   * a `before(:once)` block should not reference instance variables set by a
@@ -96,4 +99,3 @@ of activerecord callbacks/inserts/updates.
   in a particular example), you should ensure they don't conflict with
   each other (e.g. unique constraint violations, or one `let_once`
   mutating the return value of another).
-
