@@ -96,27 +96,4 @@ of activerecord callbacks/inserts/updates.
   in a particular example), you should ensure they don't conflict with
   each other (e.g. unique constraint violations, or one `let_once`
   mutating the return value of another).
-* Some effort is made to preserve object identity, but just for instance
-  variables and return values, e.g.:
-
-  ```ruby
-    let_once(:user) { User.new }
-    let_once(:users) { [user] }
-
-    before(:once) do
-      @joe = user
-      @also_joe = @joe
-      @joe_ish = [@joe]
-    end
-
-    # within an example:
-    # user == @joe             => true
-    # user.equal? @joe         => true # yay
-    # user == @also_joe        => true
-    # user.equal? @also_joe    => true # yay
-    # user == users[0]         => true
-    # user.equal? users[0]     => false # d'oh
-    # user == @joe_ish[0]      => true
-    # user.equal? @joe_ish[0]  => false # d'oh
-  ```
 

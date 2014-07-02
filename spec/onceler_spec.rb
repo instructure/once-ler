@@ -3,9 +3,20 @@ require "database_cleaner"
 require "active_record/connection_adapters/sqlite3_adapter"
 ActiveRecord::Base.establish_connection(database: ":memory:", adapter: "sqlite3")
 
-class User < ActiveRecord::Base; end
+class User < ActiveRecord::Base
+  belongs_to :group
+end
+
+class Group < ActiveRecord::Base
+  has_many :users
+end
 
 User.connection.create_table :users do |t|
+  t.string :name
+  t.integer :group_id
+end
+
+User.connection.create_table :groups do |t|
   t.string :name
 end
 
@@ -215,13 +226,17 @@ describe Onceler do
     end
   end
 
-  context "identity" do
-    let_once(:user) { User.new }
+  context "object identity" do
+    let_once(:group) { Group.create }
+    let_once(:user) { User.create(group: group) }
+    let_once(:users) { [user] }
     before { @user = @user2 = user }
 
-    it "should generally be preserved" do
+    it "should be preserved" do
       expect(user).to equal(@user)
       expect(@user).to equal(@user2)
+      expect(user.group).to equal(group)
+      expect(users.first).to equal(user)
     end
   end
 

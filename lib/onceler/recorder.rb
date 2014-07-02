@@ -72,33 +72,15 @@ module Onceler
       rollback_transactions!
     end
 
-    def reconsitute_data!
-      @ivars, @retvals = Marshal.load(@data)
-      identity_map = {}
-      reidentify!(@ivars, identity_map)
-      reidentify!(@retvals, identity_map)
-    end
-
-    def reidentify!(hash, identity_map)
-      hash.each do |key, value|
-        if identity_map.key?(value)
-          hash[key] = identity_map[value]
-        else
-          identity_map[value] = value
-        end
-      end
-    end
-
     def parent
       @group_class.parent_onceler
     end
 
     def replay_into!(instance)
-      reconsitute_data!
+      @ivars, @retvals = Marshal.load(@data)
       @ivars.each do |key, value|
         instance.instance_variable_set(key, value)
       end
-      @retvals
     end
 
     # TODO: configurable transaction fu (say, if you have multiple
