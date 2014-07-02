@@ -45,17 +45,44 @@ module Onceler
     # we don't include inherited stuff in __data, because we might need to
     # interleave things from an intermediate before(:each) at run time
     def __mutated?(key, val)
+      # top-level recorders don't inherit anything, so we always want to return true
       return true unless @__inherited_cache
       # need to do both types of comparison, i.e. it's the same object in
       # memory (not reassigned), and nothing about it has been changed
-      return true unless @__inherited_values[key].equal?(val) &&
-                         @__inherited_cache[key] == val
+      return true unless @__inherited_values[key].equal?(val)
+      return true unless __values_equal?(@__inherited_cache[key], val)
       false
+    end
+
+    def __values_equal?(obj1, obj2)
+      if ActiveRecord::Base === obj1 && ActiveRecord::Base === obj2
+        cache_key = [obj1, obj2]
+        return @__comparison_cache[cache_key] if @__comparison_cache.key?(cache_key)
+        # so as to avoid cycles while traversing AR associations
+        @__comparison_cache[cache_key] = true
+        @__comparison_cache[cache_key] = obj1.attributes == obj2.attributes &&
+                                         __associations_equal?(obj1, obj2)
+      else
+        obj1 == obj2
+      end
+    end
+
+    # if a nested once block updates an inherited object's associations,
+    # we want to know about it
+    def __associations_equal?(obj1, obj2)
+      cache1 = obj1.instance_variable_get(:@association_cache)
+      cache2 = obj2.instance_variable_get(:@association_cache)
+      cache1.all? { |k, v| __values_equal?(v.target, cache2[k].target) }
     end
 
     def __data(inherit = false)
       @__data ||= {}
-      @__data[inherit] ||= Marshal.dump([__ivars(inherit), __retvals(inherit)])
+      @__data[inherit] ||= begin
+        @__comparison_cache = {}
+        data = Marshal.dump([__ivars(inherit), __retvals(inherit)])
+        @__comparison_cache = nil
+        data
+      end
     end
 
     def copy_from(other)

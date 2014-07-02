@@ -127,6 +127,9 @@ shared_examples_for ".before(:once)" do |scope = :once|
   before(scope) do
     user_create_calls += 1
     @user = User.create(name: "sally")
+    @user2 = User.create(name: "melissa")
+    @group = Group.new(name: "red")
+    @user3 = User.create(name: "jessica", group: @group)
   end
 
   before(:each) { @num = 1 }
@@ -163,13 +166,18 @@ shared_examples_for ".before(:once)" do |scope = :once|
 
   context "with overrides" do
     before(scope) do
+      # there are many ways we might mutate things...
       @user = User.create(name: "mary")
+      @user2.update_attribute(:name, "michelle")
+      @user3.group.update_attribute(:name, "blue")
     end
 
     before(scope) { @num = 2 }
 
     it "should override results of inherited before(:once)s" do
       expect(@user.name).to eql("mary")
+      expect(@user2.name).to eql("michelle")
+      expect(@user3.group.name).to eql("blue")
     end
 
     it "should override results of inherited before(:each)s" do
