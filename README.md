@@ -58,9 +58,9 @@ once-ler adds two new `before`/`after` scopes, `:record` and `:reset`, in
 case you need to implement additional logic. `:record` runs in
 conjunction with once-ler's recording phase (the implicit `before :all`).
 `:reset` runs in conjunction with its cleanup phase (database rollback,
-implicit `after :all`). As oppose to `:all`/`:context` hooks, these ones
+implicit `after :all`). As opposed to `:all`/`:context` hooks, these ones
 are inherited down, and will run before/after any nested once-ler setup/
-teardown.`
+teardown.
 
 They can be used globally, or in a particular group. For example:
 
