@@ -9,19 +9,24 @@ module Onceler
 
   class Configuration
     def before(scope, &block)
-      callbacks[scope][:before] << block
+      hooks[:before][scope] << block
     end
 
-    def callbacks
-      @callbacks ||= Hash.new do |scopes, scope|
-        scopes[scope] = Hash.new do |timings, timing|
-          timings[timing] = []
-        end
+    def after(scope, &block)
+      hooks[:before][scope] << block
+    end
+
+    def hooks
+      @hooks ||= {
+        before: {record: [], reset: []},
+        after:  {record: [], reset: []}
+      }
+    end
+
+    def run_hooks(timing, scope, context)
+      hooks[timing][scope].each do |hook|
+        context ? context.instance_eval(&hook) : hook.call
       end
-    end
-
-    def run_callbacks(scope, timing)
-      callbacks[scope][timing].each(&:call)
     end
   end
 end

@@ -55,6 +55,7 @@ module Onceler
         @tape.copy_from(parent.tape)
       end
 
+      run_before_hooks(:record, @tape)
       # we don't know the order named recordings will be called (or if
       # they'll call each other), so prep everything first
       @recordings.each do |recording|
@@ -63,17 +64,49 @@ module Onceler
       @recordings.each do |recording|
         recording.record_onto!(@tape)
       end
+      run_after_hooks(:record, @tape)
       @data = @tape.__data
     ensure
       Onceler.recording = false
     end
 
     def reset!
+      run_before_hooks(:reset)
       rollback_transactions!
+      run_after_hooks(:reset)
     end
 
     def parent
       @group_class.parent_onceler
+    end
+
+    def hooks
+      @hooks ||= {
+        before: {record: [], reset: []},
+        after:  {record: [], reset: []}
+      }
+    end
+
+    def run_before_hooks(scope, context = nil)
+      if parent
+        parent.run_before_hooks(scope, context)
+      else
+        Onceler.configuration.run_hooks(:before, scope, context)
+      end
+      hooks[:before][scope].each do |hook|
+        context ? context.instance_eval(&hook) : hook.call
+      end
+    end
+
+    def run_after_hooks(scope, context = nil)
+      hooks[:after][scope].each do |hook|
+        context ? context.instance_eval(&hook) : hook.call
+      end
+      if parent
+        parent.run_before_hooks(scope, context)
+      else
+        Onceler.configuration.run_hooks(:after, scope, context)
+      end
     end
 
     def replay_into!(instance)

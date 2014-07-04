@@ -31,8 +31,8 @@ module Onceler
         onceler(:create) << block
       end
 
-      def once_scope?(scope)
-        scope == :once
+      def once_scopes
+        [:once]
       end
 
       # add second scope argument to explicitly differentiate between
@@ -40,7 +40,7 @@ module Onceler
       [:let, :let!, :subject, :subject!].each do |method|
         once_method = (method.to_s.sub(/!\z/, '') + "_once").to_sym
         define_method(method) do |name = nil, scope = nil, &block|
-          if once_scope?(scope)
+          if once_scopes.include?(scope)
             send once_method, name, &block
           else
             super name, &block
@@ -59,10 +59,24 @@ module Onceler
       end
 
       def before(*args, &block)
-        if once_scope?(args.first)
+        scope = args.first
+        case scope
+        when :record, :reset
+          onceler(:create).hooks[:before][scope] << block
+        when *once_scopes
           before_once(&block)
         else
           super(*args, &block)
+        end
+      end
+
+      def after(*args, &block)
+        scope = args.first
+        case scope
+        when :record, :reset
+          onceler(:create).hooks[:after][scope] << block
+        else
+          super
         end
       end
 
@@ -88,7 +102,6 @@ module Onceler
 
       def add_onceler_hooks!
         before(:all) do |group|
-          Onceler.configuration.run_callbacks(:record, :before)
           group.onceler.record!
         end
 
