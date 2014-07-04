@@ -52,6 +52,47 @@ describe "something" do
 end
 ```
 
+## Configuration
+
+once-ler adds two new `before`/`after` scopes, `:record` and `:reset`, in
+case you need to implement additional logic. `:record` runs in
+conjunction with once-ler's recording phase (the implicit `before :all`).
+`:reset` runs in conjunction with its cleanup phase (database rollback,
+implicit `after :all`). As oppose to `:all`/`:context` hooks, these ones
+are inherited down, and will run before/after any nested once-ler setup/
+teardown.`
+
+They can be used globally, or in a particular group. For example:
+
+```ruby
+Onceler.configure do |config|
+  config.before :record do
+    # reset some caching to ensure all recordings get a blank slate
+  end
+end
+
+describe Foo do
+  before(:record) { Foo.stubs(:enabled?).returns(true) }
+  after(:record)  { Foo.unstub(:enabled?) } # can't serialize stubs
+  before(:each)   { Foo.stubs(:enabled?).returns(true) }
+
+  context "lol" do
+    before :once do
+      # something that needs the stub to work
+    end
+    # ...
+  end
+
+  context "wut" do
+    it do
+      # something that needs the stub to work
+    end
+  end
+
+  # ...
+end
+```
+
 ## How much of a speedup will I get?
 
 YMMV, it depends on how bad your `let`s/`before`s are. For example,
@@ -63,7 +104,7 @@ model specs (spec/models/a*) **reduces their runtime by 40%**.
 Any `before(:once)`/`let_once` blocks will run just once for the current
 context/describe block, before any of its examples run. Any side effects
 (ivars) and return values will be recorded, and will then be reapplied
-before each spec in the block runs. Once-ler uses nested transactions
+before each spec in the block runs. once-ler uses nested transactions
 (savepoints) to ensure that specs don't mess with each other's database
 rows.
 
@@ -79,9 +120,10 @@ of activerecord callbacks/inserts/updates.
   statements, return values, and instance variables.
 * Your return values and instance variables:
   1. need to be able to handle a `Marshal.dump`/`load` round trip.
-  1. should implement `#==` and `#hash`. for built-ins types (e.g. String)
-     or models, this isn't a problem, but if it's a custom class you might
-     need to add them.
+     RSpec mocks/doubles can't.
+  1. should implement `#==`. For built-ins types (e.g. String) or models,
+     this isn't a problem, but if it's a custom class you might need to
+     go override `Object#==`
 * Your once'd blocks' behavior should not depend on side effects of other
   non-once'd blocks. For example:
   * a `before(:once)` block should not reference instance variables set by a
