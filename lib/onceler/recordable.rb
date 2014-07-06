@@ -70,9 +70,10 @@ module Onceler
     # if a nested once block updates an inherited object's associations,
     # we want to know about it
     def __associations_equal?(obj1, obj2)
-      cache1 = obj1.instance_variable_get(:@association_cache)
-      cache2 = obj2.instance_variable_get(:@association_cache)
-      cache1.all? { |k, v| __values_equal?(v.target, cache2[k].target) }
+      cache1 = obj1.association_cache
+      cache2 = obj2.association_cache
+      cache1.size == cache2.size &&
+      cache1.all? { |k, v| cache2.key?(k) && __values_equal?(v.target, cache2[k].target) }
     end
 
     def __data(inherit = false)
