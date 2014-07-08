@@ -116,22 +116,20 @@ module Onceler
       end
     end
 
-    # TODO: configurable transaction fu (say, if you have multiple
-    # conns)
-    def transaction_classes
-      [ActiveRecord::Base]
+    def transactional_connections
+      @group_class.onceler_connections
     end
 
     def begin_transactions!
       Onceler.open_transactions += 1
-      transaction_classes.each do |klass|
-        begin_transaction(klass.connection)
+      transactional_connections.each do |connection|
+        begin_transaction(connection)
       end
     end
 
     def rollback_transactions!
-      transaction_classes.each do |klass|
-        rollback_transaction(klass.connection)
+      transactional_connections.each do |connection|
+        rollback_transaction(connection)
       end
     ensure
       Onceler.open_transactions -= 1
