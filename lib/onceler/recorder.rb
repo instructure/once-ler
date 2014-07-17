@@ -103,7 +103,7 @@ module Onceler
         context ? context.instance_eval(&hook) : hook.call
       end
       if parent
-        parent.run_before_hooks(scope, context)
+        parent.run_after_hooks(scope, context)
       else
         Onceler.configuration.run_hooks(:after, scope, context)
       end
