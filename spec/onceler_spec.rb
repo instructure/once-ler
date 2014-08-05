@@ -230,6 +230,16 @@ describe Onceler do
         expect(@ran).to be true
       end
     end
+
+    context "in a parent group" do
+      before(:record) { @ran = true }
+      context "with recording" do
+        before(:once) { }
+        it "runs" do
+          expect(@ran).to be true
+        end
+      end
+    end
   end
 
   context "with onceler!" do

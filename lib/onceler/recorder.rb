@@ -29,6 +29,10 @@ module Onceler
       @named_recordings = []
     end
 
+    def parent_tape
+      parent.tape || parent.parent_tape if parent
+    end
+
     def <<(block)
       @recordings << Recording.new(block)
     end
@@ -51,9 +55,7 @@ module Onceler
       begin_transactions!
       @tape = @group_class.new
       @tape.send :extend, Recordable
-      if parent = @group_class.parent_onceler
-        @tape.copy_from(parent.tape)
-      end
+      @tape.copy_from(parent_tape) if parent_tape
 
       run_before_hooks(:record, @tape)
       # we don't know the order named recordings will be called (or if
