@@ -16,6 +16,7 @@ module Onceler
         raise ArgumentError, "wrong number of arguments (0 for 1)" if name.nil?
         raise "#let or #subject called without a block" if block.nil?
         onceler(:create)[name] = block
+        add_onceler_hooks!
         @current_let_once = name
         define_method(name) { onceler[name] }
       end
@@ -29,6 +30,7 @@ module Onceler
 
       def before_once(&block)
         onceler(:create) << block
+        add_onceler_hooks!
       end
 
       def once_scopes
@@ -82,15 +84,10 @@ module Onceler
 
       def onceler(create_own = false)
         if create_own
-          @onceler ||= create_onceler!
+          @onceler ||= Recorder.new(self)
         else
           @onceler || parent_onceler
         end
-      end
-
-      def create_onceler!
-        add_onceler_hooks!
-        Recorder.new(self)
       end
 
       def parent_onceler
@@ -116,6 +113,9 @@ module Onceler
       private
 
       def add_onceler_hooks!
+        return if @onceler_hooks_added
+        @onceler_hooks_added = true
+
         before(:all) do |group|
           group.onceler.record!
         end

@@ -215,6 +215,23 @@ describe Onceler do
     include_context "user cleanup"
   end
 
+  describe ".before(:record)" do
+    context "without recording" do
+      before(:record) { @ran = true }
+      it "never runs" do
+        expect(@ran).to be_nil
+      end
+    end
+
+    context "with recording" do
+      before(:record) { @ran = true }
+      before(:once)   { }
+      it "runs" do
+        expect(@ran).to be true
+      end
+    end
+  end
+
   context "with onceler!" do
     onceler!
 
