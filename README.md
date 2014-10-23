@@ -1,5 +1,7 @@
 # once-ler
 
+[<img src="https://secure.travis-ci.org/instructure/once-ler.png?rvm=1.9.3" />](http://travis-ci.org/instructure/once-ler)
+
 once-ler supercharges your `let`s and `before`s with the performance
 of `before(:all)`. You get the performance of fixtures without all the
 headaches.
