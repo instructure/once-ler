@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+require 'erubis'
+File.open('.travis.yml', 'w'){ |f| f.write Erubis::Eruby.new(File.read('.travis.yml.erb')).result }
