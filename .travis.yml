@@ -4,38 +4,22 @@ rvm:
   - 2.0.0
   - 2.1.3
 gemfile:
-  - gemfiles/rspec_2.14_ar_3.0.gemfile
   - gemfiles/rspec_2.14_ar_3.1.gemfile
   - gemfiles/rspec_2.14_ar_3.2.gemfile
   - gemfiles/rspec_2.14_ar_4.0.gemfile
   - gemfiles/rspec_2.14_ar_4.1.gemfile
   - gemfiles/rspec_2.14_ar_edge.gemfile
-  - gemfiles/rspec_3.0_ar_3.0.gemfile
   - gemfiles/rspec_3.0_ar_3.1.gemfile
   - gemfiles/rspec_3.0_ar_3.2.gemfile
   - gemfiles/rspec_3.0_ar_4.0.gemfile
   - gemfiles/rspec_3.0_ar_4.1.gemfile
   - gemfiles/rspec_3.0_ar_edge.gemfile
-  - gemfiles/rspec_3.1_ar_3.0.gemfile
   - gemfiles/rspec_3.1_ar_3.1.gemfile
   - gemfiles/rspec_3.1_ar_3.2.gemfile
   - gemfiles/rspec_3.1_ar_4.0.gemfile
   - gemfiles/rspec_3.1_ar_4.1.gemfile
   - gemfiles/rspec_3.1_ar_edge.gemfile
 matrix:
-  exclude:
-    - rvm: 2.0.0
-      gemfile: gemfiles/rspec_2.14_ar_3.0.gemfile
-    - rvm: 2.0.0
-      gemfile: gemfiles/rspec_3.0_ar_3.0.gemfile
-    - rvm: 2.0.0
-      gemfile: gemfiles/rspec_3.1_ar_3.0.gemfile
-    - rvm: 2.1.3
-      gemfile: gemfiles/rspec_2.14_ar_3.0.gemfile
-    - rvm: 2.1.3
-      gemfile: gemfiles/rspec_3.0_ar_3.0.gemfile
-    - rvm: 2.1.3
-      gemfile: gemfiles/rspec_3.1_ar_3.0.gemfile
   allow_failures:
     - gemfile: gemfiles/rspec_2.14_ar_edge.gemfile
     - gemfile: gemfiles/rspec_3.0_ar_edge.gemfile

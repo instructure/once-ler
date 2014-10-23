@@ -14,6 +14,6 @@ Gem::Specification.new do |s|
   s.homepage          = 'http://github.com/instructure/onceler'
 
   s.files = %w(README.md) + Dir['lib/**/*rb'] + Dir['test/**/*.rb']
-  s.add_dependency('activerecord', '>= 3.0')
+  s.add_dependency('activerecord', '>= 3.1')
   s.add_dependency('rspec', '>= 2.14')
 end

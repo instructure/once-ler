@@ -8,13 +8,6 @@ gemfile:
   - <%= file %>
 <% end %>
 matrix:
-  exclude:
-  <% %w[2.0.0 2.1.3].each do |ruby| -%>
-  <% Dir["gemfiles/*ar_3.0.gemfile"].each do |file| -%>
-    - rvm: <%= ruby %>
-      gemfile: <%= file %>
-  <% end -%>
-  <% end -%>
   allow_failures:
   <% Dir["gemfiles/*ar_edge.gemfile"].each do |file| -%>
     - gemfile: <%= file %>

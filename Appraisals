@@ -6,11 +6,13 @@ RSPEC_VERSIONS.each do |rspec|
     appraise "rspec-#{rspec}-ar-#{ar}" do
       gem "activerecord", "~> #{ar}.0"
       gem "rspec", "~> #{rspec}.0"
+      gem "rake"
     end
 
     appraise "rspec-#{rspec}-ar-edge" do
       gem "activerecord", github: "rails/rails"
       gem "rspec", "~> #{rspec}.0"
+      gem "rake"
     end
   end
 end
