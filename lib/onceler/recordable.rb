@@ -80,7 +80,20 @@ module Onceler
       @__data ||= {}
       @__data[inherit] ||= begin
         @__comparison_cache = {}
-        data = Marshal.dump([__ivars(inherit), __retvals(inherit)])
+        data = [__ivars(inherit), __retvals(inherit)]
+        begin
+          data = Marshal.dump(data)
+        rescue TypeError
+          data.each do |hash|
+            hash.each do |key, val|
+              begin
+                Marshal.dump(val)
+              rescue TypeError
+                raise TypeError.new("Unable to dump #{key} in #{self.class.metadata[:location]}: #{$!}")
+              end
+            end
+          end
+        end
         @__comparison_cache = nil
         data
       end
