@@ -1,5 +1,5 @@
-require "onceler"
 require "database_cleaner"
+require "onceler"
 require "active_record/connection_adapters/sqlite3_adapter"
 ActiveRecord::Base.establish_connection(database: ":memory:", adapter: "sqlite3")
 
