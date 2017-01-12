@@ -171,7 +171,7 @@ shared_examples_for ".before(:once)" do |scope = :once|
       @user = User.create(name: "mary")
       @user2.update_attribute(:name, "michelle")
       @user3.group.update_attribute(:name, "blue")
-      expect(@user4.association_cache.size).to eql(1)
+      expect(@user4.instance_variable_get(:@association_cache).size).to eql(1)
       @user4.reload
     end
 
@@ -181,7 +181,7 @@ shared_examples_for ".before(:once)" do |scope = :once|
       expect(@user.name).to eql("mary")
       expect(@user2.name).to eql("michelle")
       expect(@user3.group.name).to eql("blue")
-      expect(@user4.association_cache.size).to eql(0)
+      expect(@user4.instance_variable_get(:@association_cache).size).to eql(0)
     end
 
     it "should override results of inherited before(:each)s" do
