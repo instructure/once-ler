@@ -279,6 +279,60 @@ describe Onceler do
     end
   end
 
+  describe "error messages" do
+    include Onceler::Recordable
+
+    SomeObject = Class.new
+
+    def dump(bad_var)
+      find_dump_error :bad_var, bad_var
+    end
+
+    it "should help you find problematic instance variables" do
+      bad_var = SomeObject.new
+      bad_var.instance_variable_set(:@danger, Class.new)
+      expect { dump bad_var }.to raise_error(/Unable to dump bad_var \(#<SomeObject>\) => @danger \(#<Class>\)/)
+    end
+
+    it "should include the original TypeError text" do
+      bad_var = SomeObject.new
+      bad_var.instance_variable_set(:@danger, Class.new)
+      expect { dump bad_var }.to raise_error(/can't dump anonymous class/)
+    end
+
+    it "should help you find problematic array elements" do
+      bad_var = [1, Class.new]
+      expect { dump bad_var }.to raise_error(/Unable to dump bad_var \(#<Array>\) => \[1\] \(#<Class>\)/)
+    end
+
+    it "should help you find problematic hash keys" do
+      bad_var = { Class.new => 1 }
+      expect { dump bad_var }.to raise_error(/Unable to dump bad_var \(#<Hash>\) => hash key .* \(#<Class>\)/)
+    end
+
+    it "should help you find problematic hash values" do
+      bad_var = { k: Class.new }
+      expect { dump bad_var }.to raise_error(/Unable to dump bad_var \(#<Hash>\) => \[:k\] \(#<Class>\)/)
+    end
+
+    it "should recurse until it finds the problem" do
+      bad_var = ('a'..'e').to_a.reverse.inject(Class.new) do |var, name|
+        outer = SomeObject.new
+        outer.instance_variable_set("@#{name}", var)
+        outer
+      end
+      expect { dump bad_var }.to raise_error(/Unable to dump bad_var \(#<SomeObject>\) => @a \(#<SomeObject>\) => @b \(#<SomeObject>\) => @c \(#<SomeObject>\) => @d \(#<SomeObject>\) => @e \(#<Class>\)/)
+    end
+
+    it "should detect cycles" do
+      s = SomeObject.new
+      s.instance_variable_set(:@danger, Class.new)
+      bad_var = [s]
+      bad_var.unshift(bad_var)
+      expect { dump bad_var }.to raise_error(/Unable to dump bad_var \(#<Array>\) => \[1\] \(#<SomeObject>\) => @danger \(#<Class>\)/)
+    end
+  end
+
   after(:all) do
     # yay cleaned up
     expect(User.count).to eql(0)
