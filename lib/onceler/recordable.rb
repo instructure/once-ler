@@ -114,22 +114,26 @@ module Onceler
       # see if anything inside val can't be dumped...
       sub_prefix = "#{prefix}#{key} (#<#{val.class}>) => "
 
-      # instance var?
-      val.instance_variables.each do |k|
-        v = val.instance_variable_get(k)
-        find_dump_error(k, v, sub_prefix)
+      if val.respond_to?(:marshal_dump)
+        find_dump_error("marshal_dump", val.marshal_dump, sub_prefix)
+      else
+        # instance var?
+        val.instance_variables.each do |k|
+          v = val.instance_variable_get(k)
+          find_dump_error(k, v, sub_prefix)
+        end
+
+        # hash key/value?
+        val.each_pair do |k, v|
+          find_dump_error("hash key #{k}", k, sub_prefix)
+          find_dump_error("[#{k.inspect}]", v, sub_prefix)
+        end if val.respond_to?(:each_pair)
+
+        # array element?
+        val.each_with_index do |v, i|
+          find_dump_error("[#{i}]", v, sub_prefix)
+        end if val.respond_to?(:each_with_index)
       end
-
-      # hash key/value?
-      val.each_pair do |k, v|
-        find_dump_error("hash key #{k}", k, sub_prefix)
-        find_dump_error("[#{k.inspect}]", v, sub_prefix)
-      end if val.respond_to?(:each_pair)
-
-      # array element?
-      val.each_with_index do |v, i|
-        find_dump_error("[#{i}]", v, sub_prefix)
-      end if val.respond_to?(:each_with_index)
 
       # guess it's val proper
       raise TypeError.new("Unable to dump #{prefix}#{key} (#<#{val.class}>) in #{self.class.metadata[:location]}: #{$!}")
