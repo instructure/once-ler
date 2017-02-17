@@ -315,6 +315,19 @@ describe Onceler do
       expect { dump bad_var }.to raise_error(/Unable to dump bad_var \(#<Hash>\) => \[:k\] \(#<Class>\)/)
     end
 
+    it "should handle objects with custom marshaling" do
+      # it should complain about b, not a
+      CustomMarshaling = Struct.new(:a, :b) do
+        def marshal_dump
+          [ b ]
+        end
+      end
+      nested = SomeObject.new
+      nested.instance_variable_set(:@danger, Class.new)
+      bad_var = CustomMarshaling.new(Class.new, nested)
+      expect { dump bad_var }.to raise_error(/Unable to dump bad_var \(#<CustomMarshaling>\) => marshal_dump \(#<Array>\) => \[0\] \(#<SomeObject>\) => @danger \(#<Class>\)/)
+    end
+
     it "should recurse until it finds the problem" do
       bad_var = ('a'..'e').to_a.reverse.inject(Class.new) do |var, name|
         outer = SomeObject.new
