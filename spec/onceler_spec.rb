@@ -32,6 +32,16 @@ RSpec.configure do |config|
   end
 end
 
+Onceler.configure do |config|
+  config.before(:record) do
+    @global_before_ran = true
+  end
+
+  config.after(:record) do
+    @global_after_ran = true
+  end
+end
+
 shared_examples_for ".let_once" do |let_method = :let_once|
   user_create_calls = 0
 
@@ -52,7 +62,6 @@ shared_examples_for ".let_once" do |let_method = :let_once|
   it "should give each spec a blank slate" do
     expect(user.name).to eql("bob")
   end
-
 
   context "calling instance methods" do
     send let_method, :call_my_method do
@@ -224,10 +233,19 @@ describe Onceler do
     end
 
     context "with recording" do
-      before(:record) { @ran = true }
-      before(:once)   { }
+      before(:record) do
+        @ran = true
+        @global_before_already_ran = @global_before_ran
+      end
+
+      before(:once) { }
+
       it "runs" do
         expect(@ran).to be true
+      end
+
+      it "runs after the global hook" do
+        expect(@global_before_already_ran).to be true
       end
     end
 
@@ -237,6 +255,67 @@ describe Onceler do
         before(:once) { }
         it "runs" do
           expect(@ran).to be true
+        end
+      end
+    end
+  end
+
+  describe ".after(:record)" do
+    context "without recording" do
+      after(:record) { @ran = true }
+      it "never runs" do
+        expect(@ran).to be_nil
+      end
+    end
+
+    context "with recording" do
+      after(:record) do
+        @run_counts ||= 0
+        @run_counts += 1
+        @global_after_ran_early = @global_after_ran
+        @recording_already_ran = @recorded
+      end
+
+      before(:once) { @recorded = true }
+
+      it "runs" do
+        expect(@run_counts).to eq 1
+      end
+
+      it "runs after recording" do
+        expect(@recording_already_ran).to be true
+        expect(@recorded).to be true
+      end
+
+      it "runs before the global hook" do
+        expect(@global_after_ran_early).not_to be
+        expect(@global_after_ran).to be true
+      end
+
+      context "at multiple levels" do
+        before(:once) { }
+
+        it "runs at each level" do
+          expect(@run_counts).to eq 2
+        end
+      end
+    end
+
+    context "in a parent group" do
+      after(:record) do
+        @ran = true
+        @recording_already_ran = @recorded
+      end
+
+      context "with recording" do
+        before(:once) { @recorded = true }
+
+        it "runs" do
+          expect(@ran).to be true
+        end
+
+        it "runs after recording" do
+          expect(@recording_already_ran).to be true
         end
       end
     end
