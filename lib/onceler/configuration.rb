@@ -13,7 +13,7 @@ module Onceler
     end
 
     def after(scope, &block)
-      hooks[:before][scope] << block
+      hooks[:after][scope] << block
     end
 
     def hooks
