@@ -27,6 +27,7 @@ module Onceler
       @group_class = group_class
       @recordings = []
       @named_recordings = []
+      @arounds = []
     end
 
     def parent_tape
@@ -50,6 +51,10 @@ module Onceler
       end
     end
 
+    def add_around(block)
+      @arounds.unshift(block)
+    end
+
     def record!
       Onceler.recording = true
       begin_transactions!
@@ -63,9 +68,18 @@ module Onceler
       @recordings.each do |recording|
         recording.prepare_medium!(@tape)
       end
-      @recordings.each do |recording|
-        recording.record_onto!(@tape)
+
+      # wrap the before in a lambda
+      stack = -> do
+        @recordings.each do |recording|
+          recording.record_onto!(@tape)
+        end
       end
+      # and then stack each around block on top
+      @arounds.inject(stack) do |old_stack, hook|
+        -> { @tape.instance_exec(old_stack, &hook) }
+      end.call
+
       run_after_hooks(:record, @tape)
       @data = @tape.__data
     ensure

@@ -219,6 +219,74 @@ describe Onceler do
     include_context "user cleanup"
   end
 
+  describe ".around(:once)" do
+    # don't use an ivar, they're not shared between arounds and examples
+    x = 0
+    around(:once) do |block|
+      expect(x).to eq 0
+      x += 1
+      block.call
+      expect(x).to eq 2
+    end
+
+    before(:once) do
+      expect(x).to eq 1
+      x += 1
+    end
+
+    it "runs" do
+      expect(x).to eq 2
+    end
+  end
+
+  describe ".around(:once_and_each)" do
+    x = 0
+
+    around(:once_and_each) do |block|
+      x += 1
+      block.call
+    end
+
+    # only runs once, first
+    before(:once) do
+      expect(x).to eq 1
+    end
+
+    second_example = false
+
+    # runs before each of the two examples
+    before(:each) do
+      if second_example
+        expect(x).to eq 3
+      else
+        expect(x).to eq 2
+      end
+    end
+
+    it "runs example 1" do
+      if second_example
+        expect(x).to eq 3
+      else
+        second_example = true
+        expect(x).to eq 2
+      end
+    end
+
+    it "runs example 2" do
+      if second_example
+        expect(x).to eq 3
+      else
+        second_example = true
+        expect(x).to eq 2
+      end
+    end
+
+    # before(:once) + before(:each) + before(:each)
+    after(:all) do
+      expect(x).to eq 3
+    end
+  end
+
   describe ".before(:once)" do
     it_behaves_like ".before(:once)"
     include_context "user cleanup"

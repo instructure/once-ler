@@ -28,6 +28,11 @@ module Onceler
         alias_method :subject, name if name != :subject
       end
 
+      def around_once(&block)
+        onceler(:create).add_around(block)
+        add_onceler_hooks!
+      end
+
       def before_once(&block)
         onceler(:create) << block
         add_onceler_hooks!
@@ -79,6 +84,19 @@ module Onceler
           onceler(:create).hooks[:after][scope] << block
         else
           super
+        end
+      end
+
+      def around(*args, &block)
+        scope = args.first
+        case scope
+        when *once_scopes
+          around_once(&block)
+        when :once_and_each
+          around_once(&block)
+          around(:each, &block)
+        else
+          super(*args, &block)
         end
       end
 
