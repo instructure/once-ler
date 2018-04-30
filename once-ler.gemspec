@@ -11,9 +11,10 @@ Gem::Specification.new do |s|
 
   s.author            = 'Jon Jensen'
   s.email             = 'jon@instructure.com'
-  s.homepage          = 'http://github.com/instructure/onceler'
+  s.homepage          = 'http://github.com/instructure/once-ler'
 
   s.files = %w(README.md) + Dir['lib/**/*rb'] + Dir['test/**/*.rb']
   s.add_dependency('activerecord', '>= 4.0')
   s.add_dependency('rspec', '>= 3.0')
+  s.add_development_dependency 'byebug'
 end

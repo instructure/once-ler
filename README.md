@@ -36,6 +36,18 @@ Change a slow `let` (or `let!`) to `let_once` to speed it up.
 
 Change a slow `subject` (or `subject!`) to `subject_once` to speed it up.
 
+### around(:once) { ... }
+
+Need to run something around all of your once blocks (like freezing time)?
+Use this.
+
+### around(:once_and_each) { ... }
+
+Shorthand for around(:once) + around(:each). Be careful, as you cannot
+share state with instance variables between arounds and examples, so
+use local variables if you want to say freeze time consistently
+between all before(*) and examples.
+
 ## Ambitious usage
 
 If you're feeling bold, you can automatically speed up all
