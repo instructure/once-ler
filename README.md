@@ -46,7 +46,8 @@ Use this.
 Shorthand for around(:once) + around(:each). Be careful, as you cannot
 share state with instance variables between arounds and examples, so
 use local variables if you want to say freeze time consistently
-between all before(*) and examples.
+between all before(*) and examples. Also, the block is called twice (once for
+:once and once for :each), so be careful using, e.g. Time.now in the block.
 
 ## Ambitious usage
 
