@@ -55,6 +55,10 @@ module Onceler
       @arounds.unshift(block)
     end
 
+    def arounds
+      (parent ? parent.arounds : []) + @arounds
+    end
+
     def record!
       Onceler.recording = true
       begin_transactions!
@@ -76,7 +80,7 @@ module Onceler
         end
       end
       # and then stack each around block on top
-      @arounds.inject(stack) do |old_stack, hook|
+      arounds.inject(stack) do |old_stack, hook|
         -> { @tape.instance_exec(old_stack, &hook) }
       end.call
 
