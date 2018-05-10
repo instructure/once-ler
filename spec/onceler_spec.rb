@@ -226,6 +226,7 @@ describe Onceler do
       expect(x).to eq 0
       x += 1
       block.call
+      # 2 not 3 because the block is JUST the before(:once) block
       expect(x).to eq 2
     end
 
@@ -236,6 +237,37 @@ describe Onceler do
 
     it "runs" do
       expect(x).to eq 2
+      x += 1
+    end
+  end
+
+  describe ".around(:once) nested" do
+    x = 0
+    block_called = false
+
+    # around(:once) called, x: 0 -> 1
+    # no before(:once) at this level
+    # around(:once) called, x: 1 -> 2
+    #   before(:once) called, x: 2 -> 3
+    # example called, x: 3 -> 4
+    around(:once) do |block|
+      expect(x).to eq (block_called ? 1 : 0)
+      x += 1
+      block.call
+      expect(x).to eq (block_called ? 3 : 1)
+      block_called = true
+    end
+
+    context "in nested block" do
+      before(:once) do
+        expect(x).to eq 2
+        x += 1
+      end
+
+      it "runs" do
+        expect(x).to eq 3
+        x += 1
+      end
     end
   end
 
@@ -252,11 +284,11 @@ describe Onceler do
       expect(x).to eq 1
     end
 
-    second_example = false
+    first_example_ran = false
 
     # runs before each of the two examples
     before(:each) do
-      if second_example
+      if first_example_ran
         expect(x).to eq 3
       else
         expect(x).to eq 2
@@ -264,19 +296,19 @@ describe Onceler do
     end
 
     it "runs example 1" do
-      if second_example
+      if first_example_ran
         expect(x).to eq 3
       else
-        second_example = true
+        first_example_ran = true
         expect(x).to eq 2
       end
     end
 
     it "runs example 2" do
-      if second_example
+      if first_example_ran
         expect(x).to eq 3
       else
-        second_example = true
+        first_example_ran = true
         expect(x).to eq 2
       end
     end
