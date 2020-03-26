@@ -1,16 +1,34 @@
-RSPEC_VERSIONS=%w[3.0 3.5]
-AR_VERSIONS=%w[4.0 4.2 5.0]
+appraise "rspec-3.6-ar-5.0" do
+  gem "activerecord", "~> 5.0.0"
+  gem "database_cleaner", "~> 1.7.0"
+  gem "rspec", "~> 3.6.0"
+  gem "sqlite3", "~> 1.3.13"
+end
 
-RSPEC_VERSIONS.each do |rspec|
-  AR_VERSIONS.each do |ar|
-    appraise "rspec-#{rspec}-ar-#{ar}" do
-      gem "activerecord", "~> #{ar}.0"
-      gem "rspec", "~> #{rspec}.0"
-    end
+appraise "rspec-3.6-ar-5.2" do
+  gem "activerecord", "~> 5.2.0"
+  gem "database_cleaner", "~> 1.7.0"
+  gem "rspec", "~> 3.6.0"
+  gem "sqlite3", "~> 1.3.13"
+end
+
+# Note: Rails 5.x requires sqlite3 ~> 1.3
+%w[5.0 5.2].each do |ar|
+  appraise "rspec-3.9-ar-#{ar}-dc-1.7" do
+    gem "activerecord", "~> #{ar}.0"
+    gem "database_cleaner", "~> 1.7.0"
+    gem "rspec", "~> 3.9.0"
+    gem "sqlite3", "~> 1.3.13"
   end
 end
 
-appraise "rspec-#{RSPEC_VERSIONS.last}-ar-edge" do
-  gem "activerecord", github: "rails/rails"
-  gem "rspec", "~> #{RSPEC_VERSIONS.last}.0"
+# Note: Rails 6.x requires sqlite3 ~> 1.4
+%w[6.0].each do |ar|
+  appraise "rspec-3.9-ar-#{ar}-dc-1.8" do
+    gem "activerecord", "~> #{ar}.0"
+    gem "database_cleaner", "~> 1.8.0"
+    gem "database_cleaner-active_record", "~> 1.8.0"
+    gem "rspec", "~> 3.9.0"
+    gem "sqlite3", "~> 1.4.2"
+  end
 end
