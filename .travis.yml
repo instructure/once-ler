@@ -1,16 +1,21 @@
 language: ruby
+
 rvm:
-  - 2.2
-  - 2.3
+  - 2.4
+  - 2.5
+  - 2.6
+  - 2.7
+
 gemfile:
-  - gemfiles/rspec_3.0_ar_4.0.gemfile
-  - gemfiles/rspec_3.0_ar_4.2.gemfile
-  - gemfiles/rspec_3.0_ar_5.0.gemfile
-  - gemfiles/rspec_3.5_ar_4.0.gemfile
-  - gemfiles/rspec_3.5_ar_4.2.gemfile
-  - gemfiles/rspec_3.5_ar_5.0.gemfile
-  - gemfiles/rspec_3.5_ar_edge.gemfile
+  - gemfiles/rspec_3.9_ar_6.0_dc_1.8.gemfile
+  - gemfiles/rspec_3.6_ar_5.2.gemfile
+  - gemfiles/rspec_3.9_ar_5.2_dc_1.7.gemfile
+  - gemfiles/rspec_3.9_ar_5.0_dc_1.7.gemfile
+  - gemfiles/rspec_3.6_ar_5.0.gemfile
+
 matrix:
-  allow_failures:
-    - gemfile: gemfiles/rspec_3.5_ar_edge.gemfile
+  exclude:
+    - rvm: 2.4
+      gemfile: gemfiles/rspec_3.9_ar_6.0_dc_1.8.gemfile
+
 bundler_args: --without development

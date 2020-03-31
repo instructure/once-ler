@@ -1,2 +1,2 @@
 require "active_record"
-require "onceler/transactions/active_record_4"
+require "onceler/transactions/active_record"
