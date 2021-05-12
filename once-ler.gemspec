@@ -5,6 +5,7 @@ Gem::Specification.new do |s|
   s.version = '1.1.0'
   s.summary = 'rspec supercharger'
   s.description = "once-ler supercharges your let's and before's with the performance of before(:all)"
+  s.license = 'MIT'
 
   s.required_ruby_version     = '>= 2.6'
   s.required_rubygems_version = '>= 2.6.0'
