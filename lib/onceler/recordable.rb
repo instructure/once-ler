@@ -105,34 +105,37 @@ module Onceler
     end
 
     def find_dump_error(key, val, prefix = "")
-      return if __visited_dump_vars.include?(val)
+      return true if __visited_dump_vars.include?(val)
       __visited_dump_vars << val
 
       Marshal.dump(val)
+      false
     rescue TypeError
 
       # see if anything inside val can't be dumped...
       sub_prefix = "#{prefix}#{key} (#<#{val.class}>) => "
 
       if val.respond_to?(:marshal_dump)
-        find_dump_error("marshal_dump", val.marshal_dump, sub_prefix)
+        return true if find_dump_error("marshal_dump", val.marshal_dump, sub_prefix)
       else
+        results = []
         # instance var?
-        val.instance_variables.each do |k|
+        results << val.instance_variables.each do |k|
           v = val.instance_variable_get(k)
           find_dump_error(k, v, sub_prefix)
-        end
+        end.any?
 
         # hash key/value?
         val.each_pair do |k, v|
-          find_dump_error("hash key #{k}", k, sub_prefix)
-          find_dump_error("[#{k.inspect}]", v, sub_prefix)
+          results << find_dump_error("hash key #{k}", k, sub_prefix)
+          results << find_dump_error("[#{k.inspect}]", v, sub_prefix)
         end if val.respond_to?(:each_pair)
 
         # array element?
         val.each_with_index do |v, i|
-          find_dump_error("[#{i}]", v, sub_prefix)
+          results << find_dump_error("[#{i}]", v, sub_prefix)
         end if val.respond_to?(:each_with_index)
+        return true if results.any?
       end
 
       # guess it's val proper
