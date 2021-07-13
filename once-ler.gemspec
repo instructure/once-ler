@@ -19,6 +19,6 @@ Gem::Specification.new do |s|
   s.add_dependency 'activerecord', '>= 5.2', '< 6.1'
   s.add_dependency 'rspec', '>= 3.6'
 
-  s.add_development_dependency 'appraisal', '~> 2.2'
+  s.add_development_dependency 'appraisal', '~> 2.3.0'
   s.add_development_dependency 'byebug'
 end
