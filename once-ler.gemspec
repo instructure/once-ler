@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = 'once-ler'
-  s.version = '1.1.2'
+  s.version = '1.2.0'
   s.summary = 'rspec supercharger'
   s.description = "once-ler supercharges your let's and before's with the performance of before(:all)"
   s.license = 'MIT'
