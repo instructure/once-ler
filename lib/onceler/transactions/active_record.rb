@@ -1,7 +1,7 @@
 module Onceler
   module Transactions
     def begin_transaction(conn)
-      conn.begin_transaction requires_new: true, joinable: false
+      conn.begin_transaction joinable: false
     end
 
     def rollback_transaction(conn)
@@ -9,4 +9,3 @@ module Onceler
     end
   end
 end
-
