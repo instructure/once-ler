@@ -1,4 +1,4 @@
-name: GitHub Actions Demo
+name: Test Once-ler
 on: [pull_request]
 jobs:
   test:

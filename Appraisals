@@ -4,7 +4,7 @@
     gem "activerecord", "~> #{ar}.0"
     gem "database_cleaner", "~> 2.0"
     gem "database_cleaner-active_record", "~> 2.0"
-    gem "rspec", "~> 3.9.0"
+    gem "rspec", "~> 3.10.0"
     gem "sqlite3", "~> 1.4.2"
   end
 end
