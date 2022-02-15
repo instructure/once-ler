@@ -1,16 +1,7 @@
 require "onceler/recordable"
-require "onceler/transactions"
 
 module Onceler
   class << self
-    def open_transactions
-      @open_transactions ||= 0
-    end
-
-    def open_transactions=(val)
-      @open_transactions = val
-    end
-
     attr_accessor :recording
 
     def recording?
@@ -19,8 +10,6 @@ module Onceler
   end
 
   class Recorder
-    include Transactions
-
     attr_accessor :tape
 
     def initialize(group_class)
@@ -61,8 +50,8 @@ module Onceler
 
     def record!
       Onceler.recording = true
-      begin_transactions!
       @tape = @group_class.new
+      @tape.setup_fixtures
       @tape.send :extend, Recordable
       @tape.copy_from(parent_tape) if parent_tape
 
@@ -92,7 +81,7 @@ module Onceler
 
     def reset!
       run_before_hooks(:reset)
-      rollback_transactions!
+      @tape.teardown_fixtures
       run_after_hooks(:reset)
     end
 
@@ -134,25 +123,6 @@ module Onceler
       @ivars.each do |key, value|
         instance.instance_variable_set(key, value)
       end
-    end
-
-    def transactional_connections
-      @group_class.onceler_connections
-    end
-
-    def begin_transactions!
-      Onceler.open_transactions += 1
-      transactional_connections.each do |connection|
-        begin_transaction(connection)
-      end
-    end
-
-    def rollback_transactions!
-      transactional_connections.each do |connection|
-        rollback_transaction(connection)
-      end
-    ensure
-      Onceler.open_transactions -= 1
     end
   end
 

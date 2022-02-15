@@ -113,21 +113,6 @@ module Onceler
         superclass.onceler
       end
 
-      # Set this if you have multiple (or different) conns you will be
-      # once-ler'ing. Can either be an enumerable, or a proc that returns
-      # one. Note that if given a proc, it will only be called once (the
-      # first time it's needed) and cached after that.
-      #
-      # context "Foo" do
-      #   self.onceler_connections = -> { [Foo.connection] }
-      #   ...
-      attr_writer :onceler_connections
-      def onceler_connections
-        @onceler_connections ||= [ActiveRecord::Base.connection]
-        @onceler_connections = instance_eval(&@onceler_connections) if @onceler_connections.respond_to?(:call)
-        @onceler_connections
-      end
-
       private
 
       def add_onceler_hooks!

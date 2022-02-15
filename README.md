@@ -129,8 +129,7 @@ of activerecord callbacks/inserts/updates.
 ## Caveats
 
 * If you are doing anything database-y, you need to use transactional
-  tests (either via `use_transactional_fixtures=true`, or something like
-  [database_cleaner](https://github.com/DatabaseCleaner/database_cleaner))
+  test via `use_transactional_fixtures=true`
 * Your once'd blocks should have no side effects other than database
   statements, return values, and instance variables.
 * Your return values and instance variables:
