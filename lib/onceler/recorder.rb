@@ -81,7 +81,7 @@ module Onceler
 
     def reset!
       run_before_hooks(:reset)
-      @tape.teardown_fixtures
+      @tape&.teardown_fixtures
       run_after_hooks(:reset)
     end
 

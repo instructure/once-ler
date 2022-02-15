@@ -221,7 +221,7 @@ shared_examples_for ".before(:once)" do |scope = :once|
 end
 
 shared_context "user cleanup" do
-  after(:all) { expect(User.count).to eql(0)}
+  after(:all) { expect(User.count).to eql(0) }
 end
 
 describe Onceler do
