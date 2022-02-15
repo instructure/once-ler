@@ -15,7 +15,9 @@ jobs:
         uses: ruby/setup-ruby@359bebbc29cbe6c87da6bc9ea3bc930432750108
         with:
           ruby-version: '${{ matrix.ruby }}'
+      - run: bundle config gemfile gemfiles/${{ matrix.gemfile }}.gemfile
+      - run: bundle config without development
       - name: Install dependencies
-        run: bundle install --without development --gemfile gemfiles/${{ matrix.gemfile }}.gemfile
+        run: bundle install
       - name: Run tests
         run: bundle exec rake
