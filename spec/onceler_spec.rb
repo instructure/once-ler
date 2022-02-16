@@ -1,6 +1,9 @@
 require "database_cleaner"
 require "onceler"
 require "active_record/connection_adapters/sqlite3_adapter"
+# Minimal set of requires to get FixtureSupport
+require "rspec/rails/adapters"
+require "rspec/rails/fixture_support"
 ActiveRecord::Base.establish_connection(database: ":memory:", adapter: "sqlite3")
 
 class User < ActiveRecord::Base
@@ -21,6 +24,16 @@ User.connection.create_table :groups do |t|
 end
 
 RSpec.configure do |config|
+  # Adapted from rspec/rails/configuration to be the minimal set
+  config.add_setting :use_active_record, default: true
+  config.add_setting :use_transactional_fixtures
+  config.add_setting :use_instantiated_fixtures
+  config.add_setting :global_fixtures
+  config.add_setting :fixture_path
+  config.include RSpec::Rails::FixtureSupport
+
+  config.use_transactional_fixtures = true
+
   config.before(:suite) do
     DatabaseCleaner.strategy = :transaction
   end

@@ -1,0 +1,23 @@
+name: Test Once-ler
+on: [pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby: [2.6, 2.7, 3.0]
+        gemfile:
+          - rspec_3.9_ar_6.0_dc_2.0
+          - rspec_3.9_ar_6.1_dc_2.0
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@359bebbc29cbe6c87da6bc9ea3bc930432750108
+        with:
+          ruby-version: '${{ matrix.ruby }}'
+      - run: bundle config gemfile gemfiles/${{ matrix.gemfile }}.gemfile
+      - run: bundle config without development
+      - name: Install dependencies
+        run: bundle install
+      - name: Run tests
+        run: bundle exec rake
