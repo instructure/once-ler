@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = 'once-ler'
-  s.version = '2.0.0'
+  s.version = '2.0.1'
   s.summary = 'rspec supercharger'
   s.description = "once-ler supercharges your let's and before's with the performance of before(:all)"
   s.license = 'MIT'
@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
 
   s.files = %w(README.md) + Dir['lib/**/*.rb']
 
-  s.add_dependency 'activerecord', '>= 6.0', '< 6.2'
+  s.add_dependency 'activerecord', '>= 6.0', '< 7.1'
   s.add_dependency 'rspec', '>= 3.6'
   s.add_dependency 'rspec-rails', '>= 4.0'
 
