@@ -9,6 +9,10 @@ jobs:
         gemfile:
           - rspec_3.9_ar_6.0_dc_2.0
           - rspec_3.9_ar_6.1_dc_2.0
+          - rspec_3.9_ar_7.0_dc_2.0
+        exclude:
+          - ruby: 2.6
+            gemfile: rspec_3.9_ar_7.0_dc_2.0
     steps:
       - uses: actions/checkout@v2
       - name: Set up Ruby
