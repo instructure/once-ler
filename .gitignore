@@ -1,5 +1,3 @@
-/gemfiles/.bundle
 /*.gem
-/Gemfile.lock
-*gemfile.lock
 *.gem
+/.bundle
