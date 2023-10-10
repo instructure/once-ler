@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    once-ler (2.0.1)
+    once-ler (2.0.2)
       activerecord (>= 6.0, < 7.2)
       rspec (>= 3.6)
       rspec-rails (>= 4.0)
@@ -64,10 +64,6 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
       zeitwerk (~> 2.2, >= 2.2.2)
-    appraisal (2.3.0)
-      bundler
-      rake
-      thor (>= 0.14.0)
     builder (3.2.4)
     concurrent-ruby (1.2.2)
     crass (1.0.6)
@@ -101,18 +97,22 @@ GEM
       net-smtp
     marcel (1.0.2)
     method_source (1.0.0)
-    mini_mime (1.1.2)
+    mini_mime (1.1.5)
+    mini_portile2 (2.8.4)
     minitest (5.20.0)
-    net-imap (0.3.6)
+    net-imap (0.4.1)
       date
       net-protocol
     net-pop (0.1.2)
       net-protocol
     net-protocol (0.2.1)
       timeout
-    net-smtp (0.3.3)
+    net-smtp (0.4.0)
       net-protocol
     nio4r (2.5.9)
+    nokogiri (1.15.4)
+      mini_portile2 (~> 2.8.2)
+      racc (~> 1.4)
     nokogiri (1.15.4-arm64-darwin)
       racc (~> 1.4)
     psych (5.1.0)
@@ -189,19 +189,22 @@ GEM
     timeout (0.4.0)
     tzinfo (1.2.11)
       thread_safe (~> 0.1)
-    websocket-driver (0.7.5)
+    websocket-driver (0.7.6)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
     zeitwerk (2.6.12)
 
 PLATFORMS
-  arm64-darwin-22
+  arm64-darwin
+  ruby
+  x86_64-darwin
+  x86_64-linux
 
 DEPENDENCIES
-  appraisal (~> 2.3.0)
   database_cleaner (~> 2.0)
   database_cleaner-active_record (~> 2.0)
   debug
+  globalid (~> 1.1.0)
   once-ler!
   rails (~> 6.0.0)
   rake
