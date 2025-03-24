@@ -2,13 +2,39 @@ PATH
   remote: .
   specs:
     once-ler (2.0.2)
-      activerecord (>= 6.0, < 7.2)
+      activerecord (>= 7.0, < 7.2)
       rspec (>= 3.6)
       rspec-rails (>= 4.0)
 
 GEM
   remote: http://rubygems.org/
   specs:
+    actioncable (7.1.0)
+      actionpack (= 7.1.0)
+      activesupport (= 7.1.0)
+      nio4r (~> 2.0)
+      websocket-driver (>= 0.6.1)
+      zeitwerk (~> 2.6)
+    actionmailbox (7.1.0)
+      actionpack (= 7.1.0)
+      activejob (= 7.1.0)
+      activerecord (= 7.1.0)
+      activestorage (= 7.1.0)
+      activesupport (= 7.1.0)
+      mail (>= 2.7.1)
+      net-imap
+      net-pop
+      net-smtp
+    actionmailer (7.1.0)
+      actionpack (= 7.1.0)
+      actionview (= 7.1.0)
+      activejob (= 7.1.0)
+      activesupport (= 7.1.0)
+      mail (~> 2.5, >= 2.5.4)
+      net-imap
+      net-pop
+      net-smtp
+      rails-dom-testing (~> 2.2)
     actionpack (7.1.0)
       actionview (= 7.1.0)
       activesupport (= 7.1.0)
@@ -18,18 +44,34 @@ GEM
       rack-test (>= 0.6.3)
       rails-dom-testing (~> 2.2)
       rails-html-sanitizer (~> 1.6)
+    actiontext (7.1.0)
+      actionpack (= 7.1.0)
+      activerecord (= 7.1.0)
+      activestorage (= 7.1.0)
+      activesupport (= 7.1.0)
+      globalid (>= 0.6.0)
+      nokogiri (>= 1.8.5)
     actionview (7.1.0)
       activesupport (= 7.1.0)
       builder (~> 3.1)
       erubi (~> 1.11)
       rails-dom-testing (~> 2.2)
       rails-html-sanitizer (~> 1.6)
+    activejob (7.1.0)
+      activesupport (= 7.1.0)
+      globalid (>= 0.3.6)
     activemodel (7.1.0)
       activesupport (= 7.1.0)
     activerecord (7.1.0)
       activemodel (= 7.1.0)
       activesupport (= 7.1.0)
       timeout (>= 0.4.0)
+    activestorage (7.1.0)
+      actionpack (= 7.1.0)
+      activejob (= 7.1.0)
+      activerecord (= 7.1.0)
+      activesupport (= 7.1.0)
+      marcel (~> 1.0)
     activesupport (7.1.0)
       base64
       bigdecimal
@@ -56,6 +98,7 @@ GEM
       activerecord (>= 5.a)
       database_cleaner-core (~> 2.0.0)
     database_cleaner-core (2.0.1)
+    date (3.3.3)
     debug (1.8.0)
       irb (>= 1.5.0)
       reline (>= 0.3.1)
@@ -63,6 +106,8 @@ GEM
     drb (2.1.1)
       ruby2_keywords
     erubi (1.12.0)
+    globalid (1.2.1)
+      activesupport (>= 6.1)
     i18n (1.14.1)
       concurrent-ruby (~> 1.0)
     io-console (0.6.0)
@@ -72,8 +117,27 @@ GEM
     loofah (2.21.3)
       crass (~> 1.0.2)
       nokogiri (>= 1.12.0)
+    mail (2.8.1)
+      mini_mime (>= 0.1.1)
+      net-imap
+      net-pop
+      net-smtp
+    marcel (1.0.2)
+    mini_mime (1.1.5)
     minitest (5.20.0)
     mutex_m (0.1.2)
+    net-imap (0.4.0)
+      date
+      net-protocol
+    net-pop (0.1.2)
+      net-protocol
+    net-protocol (0.2.1)
+      timeout
+    net-smtp (0.4.0)
+      net-protocol
+    nio4r (2.5.9)
+    nokogiri (1.15.4-aarch64-linux)
+      racc (~> 1.4)
     nokogiri (1.15.4-arm64-darwin)
       racc (~> 1.4)
     psych (5.1.0)
@@ -87,6 +151,20 @@ GEM
     rackup (2.1.0)
       rack (>= 3)
       webrick (~> 1.8)
+    rails (7.1.0)
+      actioncable (= 7.1.0)
+      actionmailbox (= 7.1.0)
+      actionmailer (= 7.1.0)
+      actionpack (= 7.1.0)
+      actiontext (= 7.1.0)
+      actionview (= 7.1.0)
+      activejob (= 7.1.0)
+      activemodel (= 7.1.0)
+      activerecord (= 7.1.0)
+      activestorage (= 7.1.0)
+      activesupport (= 7.1.0)
+      bundler (>= 1.15.0)
+      railties (= 7.1.0)
     rails-dom-testing (2.2.0)
       activesupport (>= 5.0.0)
       minitest
@@ -136,9 +214,13 @@ GEM
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     webrick (1.8.1)
+    websocket-driver (0.7.6)
+      websocket-extensions (>= 0.1.0)
+    websocket-extensions (0.1.5)
     zeitwerk (2.6.12)
 
 PLATFORMS
+  aarch64-linux
   arm64-darwin-22
 
 DEPENDENCIES
@@ -147,6 +229,7 @@ DEPENDENCIES
   database_cleaner-active_record (~> 2.0)
   debug
   once-ler!
+  rails (~> 7.1.0)
   rake
   sqlite3 (~> 1.4.2)
 

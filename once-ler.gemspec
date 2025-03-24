@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
 
   s.files = %w(README.md) + Dir['lib/**/*.rb']
 
-  s.add_dependency 'activerecord', '>= 6.0', '< 7.2'
+  s.add_dependency 'activerecord', '>= 7.0', '< 7.2'
   s.add_dependency 'rspec', '>= 3.6'
   s.add_dependency 'rspec-rails', '>= 4.0'
 
