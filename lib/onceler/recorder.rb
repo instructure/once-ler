@@ -51,7 +51,7 @@ module Onceler
     def record!
       Onceler.recording = true
       @tape = @group_class.new
-      @tape.setup_fixtures
+      @tape.send(:setup_fixtures)
       @tape.send :extend, Recordable
       @tape.copy_from(parent_tape) if parent_tape
 
