@@ -78,6 +78,8 @@ GEM
       bundler
       rake
       thor (>= 0.14.0)
+    base64 (0.1.1)
+    bigdecimal (3.1.4)
     builder (3.2.4)
     concurrent-ruby (1.2.2)
     crass (1.0.6)
@@ -92,6 +94,8 @@ GEM
       irb (>= 1.5.0)
       reline (>= 0.3.1)
     diff-lcs (1.5.0)
+    drb (2.1.1)
+      ruby2_keywords
     erubi (1.12.0)
     globalid (1.2.1)
       activesupport (>= 6.1)
@@ -113,6 +117,7 @@ GEM
     method_source (1.0.0)
     mini_mime (1.1.5)
     minitest (5.20.0)
+    mutex_m (0.1.2)
     net-imap (0.4.0)
       date
       net-protocol
@@ -187,6 +192,7 @@ GEM
       rspec-mocks (~> 3.12)
       rspec-support (~> 3.12)
     rspec-support (3.12.1)
+    ruby2_keywords (0.0.5)
     sqlite3 (1.4.4)
     stringio (3.0.8)
     thor (1.2.2)
@@ -204,9 +210,13 @@ PLATFORMS
 
 DEPENDENCIES
   appraisal (~> 2.3.0)
+  base64 (~> 0.1)
+  bigdecimal (~> 3.1)
   database_cleaner (~> 2.0)
   database_cleaner-active_record (~> 2.0)
   debug
+  drb (~> 2.1)
+  mutex_m (~> 0.1)
   once-ler!
   rails (~> 7.0.0)
   rake
