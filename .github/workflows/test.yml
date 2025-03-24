@@ -4,10 +4,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         ruby: [3.1, 3.2, 3.3, 3.4]
         lockfile:
           - Gemfile.activerecord-7.0.lock
+          - Gemfile.activerecord-7.1.lock
           - Gemfile.lock
     env:
       BUNDLE_LOCKFILE: ${{ matrix.lockfile }}

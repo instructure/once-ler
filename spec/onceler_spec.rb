@@ -1,3 +1,4 @@
+require "logger"
 require "database_cleaner"
 require "onceler"
 require "active_record/connection_adapters/sqlite3_adapter"
