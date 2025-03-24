@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.description = "once-ler supercharges your let's and before's with the performance of before(:all)"
   s.license = 'MIT'
 
-  s.required_ruby_version     = '>= 2.7'
+  s.required_ruby_version     = '>= 3.1'
   s.required_rubygems_version = '>= 2.6.0'
 
   s.author            = 'Jon Jensen'

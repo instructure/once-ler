@@ -5,13 +5,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ruby: [2.7, 3.0, 3.1, 3.2]
+        ruby: [3.1, 3.2]
         lockfile:
           - Gemfile.activerecord-6.0.lock
           - Gemfile.activerecord-6.1.lock
           - Gemfile.activerecord-7.0.lock
           - Gemfile.activerecord-7.1.lock
-    env: 
+    env:
       BUNDLE_LOCKFILE: ${{ matrix.lockfile }}
     steps:
       - uses: actions/checkout@v2
