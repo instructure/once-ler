@@ -1,8 +1,8 @@
 PATH
   remote: .
   specs:
-    once-ler (2.0.1)
-      activerecord (>= 6.0, < 7.2)
+    once-ler (2.0.2)
+      activerecord (>= 7.0, < 7.2)
       rspec (>= 3.6)
       rspec-rails (>= 4.0)
 
@@ -93,8 +93,8 @@ GEM
       reline (>= 0.3.1)
     diff-lcs (1.5.0)
     erubi (1.12.0)
-    globalid (1.1.0)
-      activesupport (>= 5.0)
+    globalid (1.2.1)
+      activesupport (>= 6.1)
     i18n (1.14.1)
       concurrent-ruby (~> 1.0)
     io-console (0.6.0)
@@ -111,18 +111,20 @@ GEM
       net-smtp
     marcel (1.0.2)
     method_source (1.0.0)
-    mini_mime (1.1.2)
+    mini_mime (1.1.5)
     minitest (5.20.0)
-    net-imap (0.3.6)
+    net-imap (0.4.0)
       date
       net-protocol
     net-pop (0.1.2)
       net-protocol
     net-protocol (0.2.1)
       timeout
-    net-smtp (0.3.3)
+    net-smtp (0.4.0)
       net-protocol
     nio4r (2.5.9)
+    nokogiri (1.15.4-aarch64-linux)
+      racc (~> 1.4)
     nokogiri (1.15.4-arm64-darwin)
       racc (~> 1.4)
     psych (5.1.0)
@@ -191,12 +193,13 @@ GEM
     timeout (0.4.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
-    websocket-driver (0.7.5)
+    websocket-driver (0.7.6)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
     zeitwerk (2.6.12)
 
 PLATFORMS
+  aarch64-linux
   arm64-darwin-22
 
 DEPENDENCIES
