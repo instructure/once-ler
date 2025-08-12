@@ -1,7 +1,6 @@
 require "logger"
 require "database_cleaner"
 require "onceler"
-require "active_record/connection_adapters/sqlite3_adapter"
 # Minimal set of requires to get FixtureSupport
 require "rspec/rails/adapters"
 require "rspec/rails/fixture_support"

@@ -10,7 +10,12 @@ jobs:
         lockfile:
           - Gemfile.activerecord-7.0.lock
           - Gemfile.activerecord-7.1.lock
+          - Gemfile.activerecord-7.2.lock
           - Gemfile.lock
+        exclude:
+          # Ruby 3.1 doesn't support Rails 8
+          - ruby: 3.1
+            lockfile: Gemfile.lock
     env:
       BUNDLE_LOCKFILE: ${{ matrix.lockfile }}
     steps:
@@ -18,7 +23,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '${{ matrix.ruby }}'
+          ruby-version: "${{ matrix.ruby }}"
       - name: Install dependencies
         run: bundle install
       - name: Run tests
