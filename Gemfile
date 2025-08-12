@@ -21,6 +21,10 @@ lockfile "activerecord-7.1" do
   gem "rails", "~> 7.1.0"
 end
 
+lockfile "activerecord-7.2" do
+  gem "rails", "~> 7.2.0"
+end
+
 lockfile do
-  gem 'rails', "~> 7.2.0"
+  gem 'rails', "~> 8.0.0"
 end
