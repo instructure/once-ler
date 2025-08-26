@@ -2,12 +2,12 @@
 
 Gem::Specification.new do |s|
   s.name = 'once-ler'
-  s.version = '2.1.0'
+  s.version = '2.2.0'
   s.summary = 'rspec supercharger'
   s.description = "once-ler supercharges your let's and before's with the performance of before(:all)"
   s.license = 'MIT'
 
-  s.required_ruby_version     = '>= 3.1'
+  s.required_ruby_version     = '>= 3.2'
   s.required_rubygems_version = '>= 2.6.0'
 
   s.author            = 'Jon Jensen'
@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
 
   s.files = %w(README.md) + Dir['lib/**/*.rb']
 
-  s.add_dependency 'activerecord', '>= 7.0', '< 8.0'
+  s.add_dependency 'activerecord', '>= 7.1', '< 8.1'
   s.add_dependency 'rspec', '>= 3.6'
   s.add_dependency 'rspec-rails', '>= 4.0'
 
@@ -26,5 +26,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'database_cleaner', '~> 2.0'
   s.add_development_dependency 'database_cleaner-active_record', '~> 2.0'
   s.add_development_dependency 'rake'
-  s.add_development_dependency 'sqlite3'
+  s.add_development_dependency 'sqlite3', '~> 2.0'
 end
