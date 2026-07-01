@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "onceler/ambitious_helpers"
 require "onceler/recorder"
 
@@ -15,26 +17,27 @@ module Onceler
       def let_once(name, &block)
         raise ArgumentError, "wrong number of arguments (0 for 1)" if name.nil?
         raise "#let or #subject called without a block" if block.nil?
-        onceler(:create)[name] = block
+
+        onceler(create_own: true)[name] = block
         add_onceler_hooks!
         @current_let_once = name
         define_method(name) { onceler[name] }
       end
 
-      # TODO NamedSubjectPreventSuper
-      def subject_once(name = nil, &block)
+      # TODO: NamedSubjectPreventSuper
+      def subject_once(name = nil, &)
         name ||= :subject
-        let_once(name, &block)
+        let_once(name, &)
         alias_method :subject, name if name != :subject
       end
 
       def around_once(&block)
-        onceler(:create).add_around(block)
+        onceler(create_own: true).add_around(block)
         add_onceler_hooks!
       end
 
       def before_once(&block)
-        onceler(:create) << block
+        onceler(create_own: true) << block
         add_onceler_hooks!
       end
 
@@ -44,22 +47,20 @@ module Onceler
 
       # add second scope argument to explicitly differentiate between
       # :each / :once
-      [:let, :let!, :subject, :subject!].each do |method|
-        once_method = (method.to_s.sub(/!\z/, '') + "_once").to_sym
+      %i[let let! subject subject!].each do |method|
+        once_method = :"#{method.to_s.delete_suffix("!")}_once"
         define_method(method) do |name = nil, scope = nil, &block|
           if once_scopes.include?(scope)
             send once_method, name, &block
           else
-            super name, &block
+            super(name, &block)
           end
         end
-      end
 
-      # set up let_each, etc.
-      [:let, :let!, :subject, :subject!].each do |method|
+        # set up let_each, etc.
         each_method = method.to_s
-        bang = each_method.sub!(/!\z/, '')
-        each_method = (each_method + "_each" + (bang ? "!" : "")).to_sym
+        bang = each_method.delete_suffix!("!")
+        each_method = :"#{each_method}_each#{"!" if bang}"
         define_method(each_method) do |name = nil, &block|
           send method, name, :each, &block
         end
@@ -69,11 +70,11 @@ module Onceler
         scope = args.first
         case scope
         when :record, :reset
-          onceler(:create).hooks[:before][scope] << block
+          onceler(create_own: true).hooks[:before][scope] << block
         when *once_scopes
           before_once(&block)
         else
-          super(*args, &block)
+          super
         end
       end
 
@@ -81,26 +82,26 @@ module Onceler
         scope = args.first
         case scope
         when :record, :reset
-          onceler(:create).hooks[:after][scope] << block
+          onceler(create_own: true).hooks[:after][scope] << block
         else
           super
         end
       end
 
-      def around(*args, &block)
+      def around(*args, &)
         scope = args.first
         case scope
         when *once_scopes
-          around_once(&block)
+          around_once(&)
         when :once_and_each
-          around_once(&block)
-          around(:each, &block)
+          around_once(&)
+          around(:each, &)
         else
-          super(*args, &block)
+          super
         end
       end
 
-      def onceler(create_own = false)
+      def onceler(create_own: false)
         if create_own
           @onceler ||= Recorder.new(self)
         else
@@ -110,6 +111,7 @@ module Onceler
 
       def parent_onceler
         return unless superclass.respond_to?(:onceler)
+
         superclass.onceler
       end
 
@@ -117,6 +119,7 @@ module Onceler
 
       def add_onceler_hooks!
         return if @onceler_hooks_added
+
         @onceler_hooks_added = true
 
         before(:all) do |group|

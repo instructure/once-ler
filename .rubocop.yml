@@ -1,0 +1,44 @@
+inherit_gem:
+  rubocop-inst:
+  - rubocop.yml
+  - rubocop-rspec.yml
+
+plugins:
+  - rubocop-rake
+
+AllCops:
+  TargetRubyVersion: 3.3
+  SuggestExtensions: false
+
+Bundler/DuplicatedGem:
+  Enabled: false
+
+Lint/ConstantDefinitionInBlock:
+  Exclude:
+    - 'spec/**/*'
+Lint/EmptyBlock:
+  Exclude:
+    - 'spec/**/*'
+
+Naming/FileName:
+  Exclude:
+    - 'lib/once-ler.rb'
+
+RSpec/EmptyHook:
+  Enabled: false
+RSpec/InstanceVariable:
+  Enabled: false
+RSpec/BeforeAfterAll:
+  Enabled: false
+RSpec/LeakyConstantDeclaration:
+  Enabled: false
+RSpec/LeakyLocalVariable:
+  Enabled: false
+
+Security/MarshalLoad:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+Style/SpecialGlobalVars:
+  Enabled: false

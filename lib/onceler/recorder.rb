@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "onceler/recordable"
 
 module Onceler
@@ -33,7 +35,7 @@ module Onceler
     end
 
     def [](name)
-      if @retvals && @retvals.key?(name)
+      if @retvals&.key?(name)
         @retvals[name]
       elsif parent
         parent[name]
@@ -63,7 +65,7 @@ module Onceler
       end
 
       # wrap the before in a lambda
-      stack = -> do
+      stack = lambda do
         @recordings.each do |recording|
           recording.record_onto!(@tape)
         end
@@ -91,8 +93,8 @@ module Onceler
 
     def hooks
       @hooks ||= {
-        before: {record: [], reset: []},
-        after:  {record: [], reset: []}
+        before: { record: [], reset: [] },
+        after: { record: [], reset: [] }
       }
     end
 

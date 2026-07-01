@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Onceler
   def self.configuration
     @configuration ||= Configuration.new
@@ -18,8 +20,8 @@ module Onceler
 
     def hooks
       @hooks ||= {
-        before: {record: [], reset: []},
-        after:  {record: [], reset: []}
+        before: { record: [], reset: [] },
+        after: { record: [], reset: [] }
       }
     end
 
