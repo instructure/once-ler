@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "logger"
 require "database_cleaner"
 require "onceler"
@@ -47,7 +49,7 @@ RSpec.configure do |config|
     DatabaseCleaner.strategy = :transaction
   end
 
-  config.around(:each) do |example|
+  config.around do |example|
     DatabaseCleaner.cleaning do
       example.run
     end
@@ -72,9 +74,9 @@ shared_examples_for ".let_once" do |let_method = :let_once|
     User.create(name: "bob")
   end
 
-  send(let_method, :things){ [1] }
+  send(let_method, :things) { [1] }
 
-  let_each(:num){ 1 }
+  let_each(:num) { 1 }
 
   it "should be memoized within a spec" do
     user.update_attribute(:name, "joe")
@@ -85,7 +87,7 @@ shared_examples_for ".let_once" do |let_method = :let_once|
     expect(user.name).to eql("bob")
   end
 
-  context "calling instance methods" do
+  context "when calling instance methods" do
     send let_method, :call_my_method do
       my_method
     end
@@ -95,19 +97,20 @@ shared_examples_for ".let_once" do |let_method = :let_once|
     end
 
     it "should work" do
-      expect(@my_method_called).to eql(true)
+      expect(@my_method_called).to be(true)
     end
   end
 
-  context "inheritance" do
-    send(let_method, :name){ "Bob" }
-    context "through" do
-      send(let_method, :bar){ "bar" }
-      context "contexts" do
+  context "with inheritance" do
+    send(let_method, :name) { "Bob" }
+    context "with multiple" do
+      send(let_method, :bar) { "bar" }
+      context "contexts" do # rubocop:disable RSpec/ContextWording
         before :once do
           # lookups here work differently than in examples, so it's good to test both
           expect(name).to eql("Bob")
         end
+
         it "works" do
           expect(name).to eql("Bob")
         end
@@ -128,7 +131,7 @@ shared_examples_for ".let_once" do |let_method = :let_once|
 
     send(let_method, :mutated_things) { things << 2 }
 
-    send(let_method, :num){ 2 }
+    send(let_method, :num) { 2 }
 
     it "should override inherited let_onces" do
       expect(user.name).to eql("billy")
@@ -139,7 +142,7 @@ shared_examples_for ".let_once" do |let_method = :let_once|
     end
 
     it "should override inherited let_eaches" do
-      expect(num).to eql 2
+      expect(num).to be 2
     end
 
     it "should not prevent inherited let_onces from running" do
@@ -148,7 +151,7 @@ shared_examples_for ".let_once" do |let_method = :let_once|
   end
 
   after(:all) do
-    expect(user_create_calls).to eql(1)
+    expect(user_create_calls).to be(1)
   end
 end
 
@@ -164,7 +167,7 @@ shared_examples_for ".before(:once)" do |scope = :once|
     @user4 = User.create(name: "dawn", group: @group)
   end
 
-  before(:each) { @num = 1 }
+  before { @num = 1 }
 
   it "should set instance variables" do
     @user.update_attribute(:name, "jane")
@@ -176,7 +179,7 @@ shared_examples_for ".before(:once)" do |scope = :once|
     expect(@user.name).to eql("sally")
   end
 
-  context "calling instance methods" do
+  context "when calling instance methods" do
     before(scope) do
       my_method
     end
@@ -186,7 +189,7 @@ shared_examples_for ".before(:once)" do |scope = :once|
     end
 
     it "should work" do
-      expect(@my_method_called).to eql(true)
+      expect(@my_method_called).to be(true)
     end
   end
 
@@ -202,7 +205,7 @@ shared_examples_for ".before(:once)" do |scope = :once|
       @user = User.create(name: "mary")
       @user2.update_attribute(:name, "michelle")
       @user3.group.update_attribute(:name, "blue")
-      expect(@user4.instance_variable_get(:@association_cache).size).to eql(1)
+      expect(@user4.instance_variable_get(:@association_cache).size).to be(1)
       @user4.reload
     end
 
@@ -212,11 +215,11 @@ shared_examples_for ".before(:once)" do |scope = :once|
       expect(@user.name).to eql("mary")
       expect(@user2.name).to eql("michelle")
       expect(@user3.group.name).to eql("blue")
-      expect(@user4.instance_variable_get(:@association_cache).size).to eql(0)
+      expect(@user4.instance_variable_get(:@association_cache).size).to be(0)
     end
 
     it "should override results of inherited before(:each)s" do
-      expect(@num).to eql 2
+      expect(@num).to be 2
     end
 
     it "should not prevent inherited before(:once)s from running" do
@@ -225,16 +228,21 @@ shared_examples_for ".before(:once)" do |scope = :once|
   end
 
   after(:all) do
-    expect(user_create_calls).to eql(1)
+    expect(user_create_calls).to be(1)
   end
 end
 
-shared_context "user cleanup" do
-  after(:all) { expect(User.count).to eql(0) }
+shared_context "user cleanup" do # rubocop:disable RSpec/ContextWording
+  after(:all) { expect(User.count).to be(0) }
 end
 
 describe Onceler do
   include Onceler::BasicHelpers
+
+  after(:all) do
+    # yay cleaned up
+    expect(User.count).to be(0)
+  end
 
   describe ".let_once" do
     it_behaves_like ".let_once"
@@ -273,14 +281,14 @@ describe Onceler do
     #   before(:once) called, x: 2 -> 3
     # example called, x: 3 -> 4
     around(:once) do |block|
-      expect(x).to eq (block_called ? 1 : 0)
+      expect(x).to eq(block_called ? 1 : 0)
       x += 1
       block.call
-      expect(x).to eq (block_called ? 3 : 1)
+      expect(x).to eq(block_called ? 3 : 1)
       block_called = true
     end
 
-    context "in nested block" do
+    context "when in nested block" do
       before(:once) do
         expect(x).to eq 2
         x += 1
@@ -309,7 +317,7 @@ describe Onceler do
     first_example_ran = false
 
     # runs before each of the two examples
-    before(:each) do
+    before do
       if first_example_ran
         expect(x).to eq 3
       else
@@ -317,6 +325,12 @@ describe Onceler do
       end
     end
 
+    # before(:once) + before(:each) + before(:each)
+    after(:all) do
+      expect(x).to eq 3
+    end
+
+    # rubocop:disable RSpec/RepeatedExample
     it "runs example 1" do
       if first_example_ran
         expect(x).to eq 3
@@ -334,11 +348,7 @@ describe Onceler do
         expect(x).to eq 2
       end
     end
-
-    # before(:once) + before(:each) + before(:each)
-    after(:all) do
-      expect(x).to eq 3
-    end
+    # rubocop:enable RSpec/RepeatedExample
   end
 
   describe ".before(:once)" do
@@ -349,6 +359,7 @@ describe Onceler do
   describe ".before(:record)" do
     context "without recording" do
       before(:record) { @ran = true }
+
       it "never runs" do
         expect(@ran).to be_nil
       end
@@ -360,7 +371,7 @@ describe Onceler do
         @global_before_already_ran = @global_before_ran
       end
 
-      before(:once) { }
+      before(:once) {}
 
       it "runs" do
         expect(@ran).to be true
@@ -371,10 +382,12 @@ describe Onceler do
       end
     end
 
-    context "in a parent group" do
+    context "when in a parent group" do
       before(:record) { @ran = true }
+
       context "with recording" do
-        before(:once) { }
+        before(:once) {}
+
         it "runs" do
           expect(@ran).to be true
         end
@@ -385,6 +398,7 @@ describe Onceler do
   describe ".after(:record)" do
     context "without recording" do
       after(:record) { @ran = true }
+
       it "never runs" do
         expect(@ran).to be_nil
       end
@@ -410,12 +424,12 @@ describe Onceler do
       end
 
       it "runs before the global hook" do
-        expect(@global_after_ran_early).not_to be
+        expect(@global_after_ran_early).to be_nil
         expect(@global_after_ran).to be true
       end
 
-      context "at multiple levels" do
-        before(:once) { }
+      context "with multiple levels" do
+        before(:once) {}
 
         it "runs at each level" do
           expect(@run_counts).to eq 2
@@ -423,7 +437,7 @@ describe Onceler do
       end
     end
 
-    context "in a parent group" do
+    context "when in a parent group" do
       after(:record) do
         @ran = true
         @recording_already_ran = @recorded
@@ -454,10 +468,12 @@ describe Onceler do
     describe ".let_each" do
       count = 0
       let_each(:foo) { count += 1 }
+      after(:all) { expect(count).to be(2) }
+
+      # rubocop:disable RSpec/RepeatedExample
       it("should behave like let") { foo }
       it("should behave like let (2)") { foo }
-
-      after(:all) { expect(count).to eql(2) }
+      # rubocop:enable RSpec/RepeatedExample
     end
 
     describe ".before(nil)" do
@@ -466,9 +482,9 @@ describe Onceler do
     end
   end
 
-  context "object identity" do
+  describe "object identity" do
     let_once(:group) { Group.create }
-    let_once(:user) { User.create(group: group) }
+    let_once(:user) { User.create(group:) }
     let_once(:users) { [user] }
     before { @user = @user2 = user }
 
@@ -520,22 +536,26 @@ describe Onceler do
       # it should complain about b, not a
       CustomMarshaling = Struct.new(:a, :b) do
         def marshal_dump
-          [ b ]
+          [b]
         end
       end
       nested = SomeObject.new
       nested.instance_variable_set(:@danger, Class.new)
       bad_var = CustomMarshaling.new(Class.new, nested)
-      expect { dump bad_var }.to raise_error(/Unable to dump bad_var \(#<CustomMarshaling>\) => marshal_dump \(#<Array>\) => \[0\] \(#<SomeObject>\) => @danger \(#<Class>\)/)
+      expect do
+        dump bad_var
+      end.to raise_error(/Unable to dump bad_var \(#<CustomMarshaling>\) => marshal_dump \(#<Array>\) => \[0\] \(#<SomeObject>\) => @danger \(#<Class>\)/) # rubocop:disable Layout/LineLength
     end
 
     it "should recurse until it finds the problem" do
-      bad_var = ('a'..'e').to_a.reverse.inject(Class.new) do |var, name|
+      bad_var = ("a".."e").to_a.reverse.inject(Class.new) do |var, name|
         outer = SomeObject.new
         outer.instance_variable_set("@#{name}", var)
         outer
       end
-      expect { dump bad_var }.to raise_error(/Unable to dump bad_var \(#<SomeObject>\) => @a \(#<SomeObject>\) => @b \(#<SomeObject>\) => @c \(#<SomeObject>\) => @d \(#<SomeObject>\) => @e \(#<Class>\)/)
+      expect do
+        dump bad_var
+      end.to raise_error(/Unable to dump bad_var \(#<SomeObject>\) => @a \(#<SomeObject>\) => @b \(#<SomeObject>\) => @c \(#<SomeObject>\) => @d \(#<SomeObject>\) => @e \(#<Class>\)/) # rubocop:disable Layout/LineLength
     end
 
     it "should detect cycles" do
@@ -543,12 +563,9 @@ describe Onceler do
       s.instance_variable_set(:@danger, Class.new)
       bad_var = [s]
       bad_var.unshift(bad_var)
-      expect { dump bad_var }.to raise_error(/Unable to dump bad_var \(#<Array>\) => \[1\] \(#<SomeObject>\) => @danger \(#<Class>\)/)
+      expect do
+        dump bad_var
+      end.to raise_error(/Unable to dump bad_var \(#<Array>\) => \[1\] \(#<SomeObject>\) => @danger \(#<Class>\)/)
     end
-  end
-
-  after(:all) do
-    # yay cleaned up
-    expect(User.count).to eql(0)
   end
 end

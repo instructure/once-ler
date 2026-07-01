@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Onceler
   module AmbitiousHelpers
     # make :once the default behavior for before/let/etc.
