@@ -16,15 +16,7 @@ Gem::Specification.new do |s|
 
   s.files = %w(README.md) + Dir['lib/**/*.rb']
 
-  s.add_dependency 'activerecord', '>= 7.0', '< 8.1'
+  s.add_dependency 'activerecord', '>= 7.0', '< 8.2'
   s.add_dependency 'rspec', '>= 3.6'
   s.add_dependency 'rspec-rails', '>= 4.0'
-
-  s.add_development_dependency 'appraisal', '~> 2.3.0'
-  s.add_development_dependency 'debug'
-
-  s.add_development_dependency 'database_cleaner', '~> 2.0'
-  s.add_development_dependency 'database_cleaner-active_record', '~> 2.0'
-  s.add_development_dependency 'rake'
-  s.add_development_dependency 'sqlite3'
 end

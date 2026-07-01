@@ -1,9 +1,18 @@
 require "logger"
 require "database_cleaner"
 require "onceler"
-# Minimal set of requires to get FixtureSupport
-require "rspec/rails/adapters"
-require "rspec/rails/fixture_support"
+
+require "action_controller"
+require "rails"
+
+class Application < Rails::Application
+  config.eager_load = false
+end
+
+Application.initialize!
+
+require "rspec/rails"
+
 ActiveRecord::Base.establish_connection(database: ":memory:", adapter: "sqlite3")
 
 class User < ActiveRecord::Base
